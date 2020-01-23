@@ -30,6 +30,8 @@
 //	3) sample texture using texture coordinate
 //	4) assign sample to output color
 
+uniform sampler2D uTex_sm
+
 out vec4 rtFragColor;
 
 void main()

@@ -33,10 +33,19 @@
 //	5) declare texture coordinate outbound varying
 //	6) correctly transform input texture coordinate by atlas matrix
 
+uniform mat4 uMVP;
+uniform mat4 uAtlas;
+
 layout (location = 0) in vec4 aPosition;
+layout (location = 7) in vec4 aTexCoord;
+out vec4 vTexCoord;
 
 void main()
 {
-	// DUMMY OUTPUT: directly assign input position to output position
-	gl_Position = aPosition;
+	// transform position by mvp
+	vec4 newPos = uMVP * aPosition;
+
+	gl_Position = newPos;
+
+	vTexCoord = uAtlas * aTexCoord;
 }
