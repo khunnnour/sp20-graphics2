@@ -31,10 +31,17 @@
 //	4) implement Lambert shading model
 //	Note: test all data and inbound values before using them!
 
+uniform sampler2D uImage0;
+uniform vec4[] uLightPos;
+uniform vec4 uLightCol;
+
+in vec4 vTexCoord;
+in vec4 vViewPos;
+in vec4 vNorm;
+
 out vec4 rtFragColor;
 
 void main()
 {
-	// DUMMY OUTPUT: all fragments are OPAQUE RED
 	rtFragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

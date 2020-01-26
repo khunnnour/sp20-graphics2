@@ -37,15 +37,15 @@ uniform mat4 uMVP;
 uniform mat4 uAtlas;
 
 layout (location = 0) in vec4 aPosition;
-layout (location = 7) in vec4 aTexCoord;
+layout (location = 8) in vec4 aTexCoord;
 out vec4 vTexCoord;
 
 void main()
 {
 	// transform position by mvp
 	vec4 newPos = uMVP * aPosition;
+	
+	vTexCoord = uAtlas * aTexCoord;
 
 	gl_Position = newPos;
-
-	vTexCoord = uAtlas * aTexCoord;
 }

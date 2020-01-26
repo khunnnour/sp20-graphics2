@@ -33,7 +33,7 @@
 
 uniform mat4 uMVP;
 
-attribute vec4 aColor;
+layout (location = 3) in vec4 aColor;
 layout (location = 0) in vec4 aPosition;
 
 out vec4 vColor;
