@@ -54,7 +54,7 @@ out vec4 vNorm;
 void main()
 {
 	vViewPos = uMV * aPosition;
-	vNorm = uMV_nrm * vNorm;
+	vNorm = uMV_nrm * aNormal;
 	
 	vTexCoord = uAtlas * aTexCoord;
 
