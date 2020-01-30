@@ -536,13 +536,13 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 	
 	// ****TO-DO: 
 	//	-> 2.1b: nonphotorealistic shading program initialization
-	/*
+	
 	// nonphotorealistic shading program
 	currentDemoProg = demoState->prog_drawNonphoto_multi;
 	a3shaderProgramCreate(currentDemoProg->program, "prog:draw-Nonphoto-multi");
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.passLightingData_transform_vs->shader);
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.drawNonphoto_multi_fs->shader);
-	*/
+	
 
 
 	// activate a primitive for validation

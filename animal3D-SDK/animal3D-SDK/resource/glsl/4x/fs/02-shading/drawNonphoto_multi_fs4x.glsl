@@ -31,10 +31,60 @@
 //	4) implement nonphotorealistic shading model
 //	Note: test all data and inbound values before using them!
 
+uniform sampler2D uImage0;
+uniform vec4[4] uLightPos;
+uniform vec4[4] uLightCol;
+uniform int uLightCt;
+
+in vec4 vTexCoord;
+in vec4 vViewPos;
+in vec4 vNorm;
+
 out vec4 rtFragColor;
+
+float rampDiff(float r)
+{
+    float minL = 0.05;
+    float cutoff  = 0.5;
+    float stripes = 3.0;
+    
+    float v = step(cutoff, r);
+    
+    if(v==1.0)
+		return ceil((r-cutoff) / (1.0-cutoff) * stripes) / stripes;
+    else
+        return v+minL;
+}
+
+vec4 findLight(vec4 lPos, vec4 lCol)
+{
+	// get normalized light direction
+	vec4 lDir = normalize(lPos - vViewPos);
+
+	// get the dot product w a min of 0
+	float res = max(dot(vNorm, lDir), 0.0);
+
+	// Return the dot product with light considered
+	return rampDiff(res) * lCol;
+}
 
 void main()
 {
+	// accum var for dot prods
+	vec4 accum = vec4(0.0);
+
+	// iterate over light array
+	for(int i = 0; i < uLightCt; i++)
+	{
+		// accumulate light and color
+		accum += findLight(uLightPos[i], uLightCol[i]);
+	}
+
+	// sample the texture
+	vec4 texSample = texture2D(uImage0, vTexCoord.xy);
+
+	rtFragColor = accum * texSample;
+
 	// DUMMY OUTPUT: all fragments are OPAQUE BLUE
-	rtFragColor = vec4(0.0, 0.0, 1.0, 1.0);
+	// rtFragColor = vec4(0.0, 0.0, 1.0, 1.0);
 }
