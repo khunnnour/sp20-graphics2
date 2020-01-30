@@ -45,28 +45,28 @@ in vec4 vNorm;
 out vec4 rtFragColor;
 
 float aExp = 64.0;
-float ka = 0.1, kd = 0.5, ks = 0.1;
+float ka = 0.1, kd = 0.6, ks = 1.5;
 
 // Calculate specularity
-vec4 findSpecular(vec4 lPos, vec4 lCol)
+float findSpecular(vec4 lPos, vec4 lCol)
 {
 	// get normalized view vector
 	vec4 viewVec = normalize(vViewPos);
 
 	// get normalized reflection vector
 	vec4 refVec = normalize(lPos - vViewPos);
-	refVec = reflect(-refVec, vNorm);
+	refVec = reflect(refVec, normalize(vNorm));
 
 	// get the dot product w a min of 0
 	float res = max(dot(viewVec, refVec), 0.0);
 	res = pow(res, aExp);
 
 	// Return the dot product
-	return ks * res * lCol;
+	return ks * res;
 }
 
 // Calculate diffuse lighting
-vec4 findLight(vec4 lPos, vec4 lCol)
+float findLight(vec4 lPos, vec4 lCol)
 {
 	// get normalized light direction
 	vec4 lDir = normalize(lPos - vViewPos);
@@ -75,7 +75,7 @@ vec4 findLight(vec4 lPos, vec4 lCol)
 	float res = max(dot(vNorm, lDir), 0.0);
 
 	// Return the dot product with light and size considered
-	return kd * res * lCol;
+	return kd * res;
 }
 
 // Calculate ambient lighting
@@ -87,26 +87,27 @@ vec4 findAmbient(vec4 col)
 // Calculate phong
 vec4 findPhong()
 {
-	vec4 phong = texture2D(uImage0, vTexCoord.xy);
+	vec4 phong;
 	vec4 amb;
 
 	// iterate over light array
 	for(int i = 0; i < uLightCt; i++)
 	{
+		float summedCoef=0.0;
 		// add diffuse
-		phong += findLight(uLightPos[i], uLightCol[i]);
+		//phong += findLight(uLightPos[i], uLightCol[i]);
+		summedCoef+= findLight(uLightPos[i], uLightCol[i]);
 		
 		// add specularity
-		phong += findSpecular(uLightPos[i], uLightCol[i]);
+		//phong += findSpecular(uLightPos[i], uLightCol[i]);
+		summedCoef+=findSpecular(uLightPos[i], uLightCol[i]);
+		
+		phong += summedCoef * uLightCol[i];
 	}
 
 	// add ambient
-	//for(int i = 0; i < uLightCt; i++)
-	//{
-	amb = findAmbient(texture2D(uImage0, vTexCoord.xy));
-	//}
-	phong += amb;
-
+	phong += findAmbient(texture2D(uImage0, vTexCoord.xy));
+	
 	return phong;
 }
 
@@ -120,4 +121,5 @@ void main()
 
 	// output new color
 	rtFragColor = texSample * accum;
+	//rtFragColor = vTexCoord;
 }
