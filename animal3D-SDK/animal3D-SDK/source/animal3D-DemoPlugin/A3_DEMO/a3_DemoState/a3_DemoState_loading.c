@@ -785,7 +785,7 @@ void a3demo_loadFramebuffers(a3_DemoState* demoState)
 
 	// ****TO-DO: 
 	//	-> 2.1c: framebuffer initialization
-	/*
+	
 	// create framebuffers and change their texture settings if need be
 	a3_Framebuffer* fbo;
 	a3ui32 i, j;
@@ -821,7 +821,7 @@ void a3demo_loadFramebuffers(a3_DemoState* demoState)
 			a3textureChangeFilterMode(a3tex_filterLinear);
 		}
 	}
-	*/
+	
 
 
 	// deactivate texture
@@ -857,8 +857,8 @@ void a3demo_refresh(a3_DemoState *demoState)
 		*const endProg = currentProg + demoStateMaxCount_shaderProgram;
 	a3_Texture* currentTex = demoState->texture,
 		* const endTex = currentTex + demoStateMaxCount_texture;
-//	a3_Framebuffer* currentFBO = demoState->framebuffer,
-//		* const endFBO = currentFBO + demoStateMaxCount_framebuffer;
+	a3_Framebuffer* currentFBO = demoState->framebuffer,
+		* const endFBO = currentFBO + demoStateMaxCount_framebuffer;
 
 	// set pointers to appropriate release callback for different asset types
 	while (currentBuff < endBuff)
@@ -869,8 +869,8 @@ void a3demo_refresh(a3_DemoState *demoState)
 		a3shaderProgramHandleUpdateReleaseCallback((currentProg++)->program);
 	while (currentTex < endTex)
 		a3textureHandleUpdateReleaseCallback(currentTex++);
-//	while (currentFBO < endFBO)
-//		a3framebufferHandleUpdateReleaseCallback(currentFBO++);
+	while (currentFBO < endFBO)
+		a3framebufferHandleUpdateReleaseCallback(currentFBO++);
 
 	// re-link specific object pointers for different asset types
 	currentBuff = demoState->vbo_staticSceneObjectDrawBuffer;
