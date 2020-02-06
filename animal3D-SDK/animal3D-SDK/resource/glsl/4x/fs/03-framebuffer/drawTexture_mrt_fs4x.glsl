@@ -47,11 +47,10 @@ void main()
 	// sample the texture
 	vec4 texSample = texture2D(uImage0, vTexCoord.xy);
 
-	// assign sample to output RT
-	vRT = texSample;
-
 	// output texcoord to new render target
 	texCoord = vTexCoord;
-
-	rtFragColor = texCoord;
+	
+	// assign sample to output RT
+	vRT = texSample;
+	rtFragColor = texSample;
 }

@@ -31,10 +31,19 @@
 //	4) sample texture using modified texture coordinate
 //	5) assign sample to output color
 
+uniform sampler2D uImage0;
+uniform float uTime;
+
+in vec4 vTexCoord;
+
 out vec4 rtFragColor;
 
 void main()
 {
-	// DUMMY OUTPUT: all fragments are OPAQUE DARK GREY
-	rtFragColor = vec4(0.2, 0.2, 0.2, 1.0);
+	vec4 newCoord = normalize(vTexCoord + uTime);
+	
+	vec4 col = texture2D(uImage0, newCoord.xy);
+
+	rtFragColor = vec4(vec3(col), 1.0);
+	//rtFragColor = vec4(0.2, 0.2, 0.2, 1.0);
 }
