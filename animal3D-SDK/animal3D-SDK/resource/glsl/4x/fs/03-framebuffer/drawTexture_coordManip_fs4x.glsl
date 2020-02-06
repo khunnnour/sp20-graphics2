@@ -32,7 +32,7 @@
 //	5) assign sample to output color
 
 uniform sampler2D uImage0;
-uniform float uTime;
+uniform double uTime;
 
 in vec4 vTexCoord;
 
@@ -40,7 +40,8 @@ out vec4 rtFragColor;
 
 void main()
 {
-	vec4 newCoord = normalize(vTexCoord + uTime);
+	float val = 0.5 * sin(float(uTime)) + 0.5;
+	vec4 newCoord = normalize(vTexCoord + val);
 	
 	vec4 col = texture2D(uImage0, newCoord.xy);
 
