@@ -28,29 +28,52 @@
 //	0) copy existing texturing shader
 //	1) implement outline algorithm - see render code for uniform hints
 
-// uniform texture variable 
+// uniform texture variable
+uniform sampler2D screenTexture;
 uniform sampler2D uImage0;
+uniform sampler2D uImage1;
 
 // inbound varying for texture coordinate
 in vec4 vTexCoord;
 
-// outbound render target
-layout (location = 0) out vec4 vRT;
-layout (location = 3) out vec4 texCoord;
 out vec4 rtFragColor;
 
 void main()
 {
+	/* - START SOBEL - */
+	// Holds values
+	vec4 colorVals[9];
+
+	// == sample all pixels in 3x3 == //
+	float w = 1.0 / textureSize(uImage1, 0).x;
+	float h = 1.0 / textureSize(uImage1, 0).y;
+
+	// bottom row
+	colorVals[0] = texture2D(uImage1, vec2(vTexCoord.x-w,vTexCoord.y-h));
+	colorVals[1] = texture2D(uImage1, vec2(vTexCoord.x+0,vTexCoord.y-h));
+	colorVals[2] = texture2D(uImage1, vec2(vTexCoord.x+w,vTexCoord.y-h));
+	// middle row
+	colorVals[3] = texture2D(uImage1, vec2(vTexCoord.x-w,vTexCoord.y+0));
+	colorVals[4] = texture2D(uImage1, vec2(vTexCoord.x+0,vTexCoord.y+0));
+	colorVals[5] = texture2D(uImage1, vec2(vTexCoord.x+w,vTexCoord.y+0));
+	// top row
+	colorVals[6] = texture2D(uImage1, vec2(vTexCoord.x-w,vTexCoord.y+h));
+	colorVals[7] = texture2D(uImage1, vec2(vTexCoord.x+0,vTexCoord.y+h));
+	colorVals[8] = texture2D(uImage1, vec2(vTexCoord.x+w,vTexCoord.y+h));
+
+	// find gx and y values
+	vec4 G, gX, gY;
+
+	gX = (colorVals[2]+2*colorVals[5]+colorVals[8])-(colorVals[0]+2*colorVals[3]+colorVals[6]);
+	gY = (colorVals[6]+2*colorVals[7]+colorVals[8])-(colorVals[0]+2*colorVals[1]+colorVals[2]);
+
+	G = sqrt(gX*gX + gY*gY);
+	/* - END SOBEL - */
+
 	// sample the texture
-	vec4 texSample = texture2D(uImage0, vTexCoord.xy);
-
-	// output texcoord to new render target
-	texCoord = vTexCoord;
+	vec4 texSample = texture2D(screenTexture, vTexCoord.xy);
 	
-	// stencil buffer
-
-	// assign sample to output RT
-	vRT = texSample;
+	float outWeight = 5.0;
+	rtFragColor = vec4(1.0-G.rgb*outWeight,1.0)*texSample;
 	//rtFragColor = texSample;
-	rtFragColor = vec4(1.0);
 }
