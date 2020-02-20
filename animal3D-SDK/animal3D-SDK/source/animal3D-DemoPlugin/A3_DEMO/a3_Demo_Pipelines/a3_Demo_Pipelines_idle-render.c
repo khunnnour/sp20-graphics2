@@ -685,6 +685,10 @@ void a3pipelines_render(a3_DemoState const* demoState, a3_Demo_Pipelines const* 
 	a3framebufferBindColorTexture(currentReadFBO, a3tex_unit00, 0);
 	a3vertexDrawableRenderActive();
 
+	a3framebufferActivate(currentWriteFBO);
+	a3framebufferBindColorTexture(readFBO[currentPass][0], a3tex_unit00, 0);
+	a3vertexDrawableRenderActive();
+
 	// blur half-size
 	currentDemoProgram = demoState->prog_drawTexture_blurGaussian;
 	a3shaderProgramActivate(currentDemoProgram->program);

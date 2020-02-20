@@ -33,10 +33,63 @@
 //	5) set location of final color render target (location 0)
 //	6) declare render targets for each attribute and shading component
 
+uniform sampler2D uImage0;
+uniform vec4[4] uLightPos;
+uniform vec4[4] uLightCol;
+uniform float[4] uLightSz;
+uniform int uLightCt;
+
+layout (location = 1) out vec4 mrtViewPos;
+layout (location = 2) out vec4 mrtViewNorm;
+layout (location = 3) out vec4 mrtTexCoord;
+layout (location = 4) out vec4 mrtDiffTex;
+layout (location = 6) out vec4 mrtDiffLight;
+
+in vec4 vTexCoord;
+in vec4 vViewPos;
+in vec4 vNorm;
+
+layout (location = 0) out vec4 finCol;
 out vec4 rtFragColor;
+
+float totDiff=0.0; // for mrt diffuse map
+vec4 findLight(vec4 lPos, vec4 lCol, float sz)
+{
+	// get normalized light direction
+	vec4 lDir = normalize(lPos - vViewPos);
+
+	// get the dot product w a min of 0
+	float res = max(dot(vNorm, lDir), 0.0);
+	totDiff += res;
+
+	// Return the dot product with light considered
+	return res * lCol;
+}
 
 void main()
 {
-	// DUMMY OUTPUT: all fragments are OPAQUE RED
-	rtFragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	// accum var for dot prods
+	vec4 accum = vec4(0.0);
+
+	// iterate over light array
+	for(int i = 0; i < uLightCt; i++)
+	{
+		// accumulate light and color
+		accum += findLight(uLightPos[i], uLightCol[i], uLightSz[i]);
+	}
+
+	// sample the texture
+	vec4 texSample = texture2D(uImage0, vTexCoord.xy);
+
+	finCol = texSample * accum;
+
+	// Output to Render Targets
+	mrtViewPos   = vec4(vViewPos.xyz, 1.0);
+	mrtViewNorm  = vec4(vNorm.xyz, 1.0);
+	mrtTexCoord  = vec4(vTexCoord.xyz, 1.0);
+	mrtDiffTex	 = vec4((totDiff*texSample).xyz, 1.0);
+	mrtDiffLight = vec4(accum.xyz, 1.0);
+
+	rtFragColor = vec4(finCol.xyz, 1.0);
+	//rtFragColor = vec4(vNorm.xyz, 1.0);
 }
