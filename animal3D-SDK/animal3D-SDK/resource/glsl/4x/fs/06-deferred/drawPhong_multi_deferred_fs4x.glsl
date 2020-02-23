@@ -38,15 +38,25 @@
 //			-> normal calculated by expanding range of normal sample
 //			-> surface texture coordinate is used as-is once sampled
 
-uniform sampler2D uImage0;
-uniform sampler2D uTex_dm;
-uniform sampler2D uTex_sm;
+uniform mat4 uPB_inv;
+uniform sampler2D uImage00;
+uniform sampler2D uImage01;//position
+uniform sampler2D uImage02;//normal
+uniform sampler2D uImage03;//texcoord
+uniform sampler2D uImage04;//diffuse map
+uniform sampler2D uImage05;
 uniform vec4 uColor;
 uniform vec4[4] uLightPos;
 uniform vec4[4] uLightCol;
 uniform float[4] uLightSz;
 uniform int uLightCt;
 
+in vbLightingData {
+	vec4 vViewPosition;
+	vec4 vViewNormal;
+	vec4 vTexcoord;
+	vec4 vBiasedClipCoord;
+};
 layout (location = 1) in vec4 rtViewPosition;
 layout (location = 2) in vec4 rtViewNormal;
 layout (location = 3) in vec4 rtAtlasTexcoord;
@@ -58,18 +68,20 @@ layout (location = 6) out vec4 rtDiffuseLightTotal;
 layout (location = 7) out vec4 rtSpecularLightTotal;
 
 float aExp = 64.0;
-float ka = 0.1, kd = 0.6, ks = 1.5;
+float ka = 1.0, kd = 1.0, ks = 1.0;
 
 // Calculate specularity
 vec4 findSpecular(vec4 lPos, vec4 lCol)
 {
 	// get normalized view vector
-	vec4 viewVec = normalize(rtViewPosition);
+	vec4 viewVec = normalize(vBiasedClipCoord);
 
 	// get normalized reflection vector
 	vec4 refVec = normalize(lPos - rtViewPosition);
-	refVec = reflect(refVec, normalize(rtViewNormal));
-
+	
+	vec4 newNorm = (rtViewNormal-0.5)*2.0;
+	refVec = reflect(refVec, newNorm);
+	
 	// get the dot product w a min of 0
 	float res = max(dot(viewVec, refVec), 0.0);
 	res = pow(res, aExp);
@@ -81,6 +93,9 @@ vec4 findSpecular(vec4 lPos, vec4 lCol)
 // Calculate diffuse lighting
 vec4 findLight(vec4 lPos, vec4 lCol)
 {
+	// get texcoord
+	vec4 actTexCoord = texture2D(uImage03, rtAtlasTexcoord.xy);
+
 	// get normalized light direction
 	vec4 lDir = normalize(lPos - rtViewPosition);
 
@@ -112,6 +127,11 @@ vec4 findPhong()
 		// add specularity
 		specularAccum += findSpecular(uLightPos[i], uLightCol[i]);
 	}
+	
+	rtDiffuseMapSample = vec4(1.0,0.0,0.0,1.0);
+
+	rtDiffuseLightTotal = vec4(0.0,0.0,1.0,1.0);
+	rtSpecularLightTotal = vec4(0.0,1.0,0.0,1.0);
 
 	// add up phong
 	phong = findAmbient() + diffuseAccum + specularAccum;
@@ -121,10 +141,11 @@ vec4 findPhong()
 
 void main()
 {
+	
 	// get phong
 	vec4 accum = findPhong();
 
 	// output new color
-	rtFragColor = texSample * accum;
-	//rtFragColor = vTexCoord;
+	rtFragColor = accum;
+	//rtFragColor = actTexCoord;
 }
