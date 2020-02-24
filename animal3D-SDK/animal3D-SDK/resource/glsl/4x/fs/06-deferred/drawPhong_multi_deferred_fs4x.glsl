@@ -40,11 +40,11 @@
 
 uniform mat4 uPB_inv;
 uniform sampler2D uImage00;
-uniform sampler2D uImage01;//position
-uniform sampler2D uImage02;//normal
-uniform sampler2D uImage03;//texcoord
-uniform sampler2D uImage04;//diffuse map
-uniform sampler2D uImage05;
+uniform sampler2D uImage01; //position
+uniform sampler2D uImage02; //normal
+uniform sampler2D uImage03; //texcoord
+uniform sampler2D uImage04; //diffuse map
+uniform sampler2D uImage05;	//specular map
 uniform vec4 uColor;
 uniform vec4[4] uLightPos;
 uniform vec4[4] uLightCol;
@@ -57,9 +57,6 @@ in vbLightingData {
 	vec4 vTexcoord;
 	vec4 vBiasedClipCoord;
 };
-layout (location = 1) in vec4 rtViewPosition;
-layout (location = 2) in vec4 rtViewNormal;
-layout (location = 3) in vec4 rtAtlasTexcoord;
 
 layout (location = 0) out vec4 rtFragColor;
 layout (location = 4) out vec4 rtDiffuseMapSample;
@@ -73,37 +70,52 @@ float ka = 1.0, kd = 1.0, ks = 1.0;
 // Calculate specularity
 vec4 findSpecular(vec4 lPos, vec4 lCol)
 {
+	// get correct coord
+	vec4 actCoord = texture(uImage03, vTexcoord.xy);
+	   
 	// get normalized view vector
-	vec4 viewVec = normalize(vBiasedClipCoord);
+	vec4 viewVec = normalize(vViewPosition);
 
 	// get normalized reflection vector
-	vec4 refVec = normalize(lPos - rtViewPosition);
+	vec4 refVec = normalize(lPos - vViewPosition);
 	
-	vec4 newNorm = (rtViewNormal-0.5)*2.0;
+	// get normal from map and uncompress
+	vec4 normSamp = texture(uImage02, actCoord.xy);
+	vec4 newNorm = (normSamp-0.5)*2.0;
 	refVec = reflect(refVec, newNorm);
 	
 	// get the dot product w a min of 0
 	float res = max(dot(viewVec, refVec), 0.0);
 	res = pow(res, aExp);
 
+	// sample spec map
+	vec4 specSamp = texture(uImage05, actCoord.xy);
+
 	// Return the dot product
-	return ks * res * lCol;
+	return ks * res * lCol * specSamp;
 }
 
 // Calculate diffuse lighting
 vec4 findLight(vec4 lPos, vec4 lCol)
 {
-	// get texcoord
-	vec4 actTexCoord = texture2D(uImage03, rtAtlasTexcoord.xy);
-
+	// get correct coord
+	vec4 actCoord = texture(uImage03, vTexcoord.xy);
+	
 	// get normalized light direction
-	vec4 lDir = normalize(lPos - rtViewPosition);
+	vec4 lDir = normalize(lPos - vViewPosition);
+
+	// get normal from map and uncompress
+	vec4 normSamp = texture(uImage02, actCoord.xy);
+	vec4 newNorm = (normSamp-0.5)*2.0;
 
 	// get the dot product w a min of 0
-	float res = max(dot(rtViewNormal, lDir), 0.0);
+	float res = max(dot(newNorm, lDir), 0.0);
+
+	// sample diff map
+	vec4 diffSamp = texture(uImage04, actCoord.xy);
 
 	// Return the dot product with light and size considered
-	return kd * res * lCol;
+	return kd * res * lCol * diffSamp;
 }
 
 // Calculate ambient lighting
@@ -128,11 +140,6 @@ vec4 findPhong()
 		specularAccum += findSpecular(uLightPos[i], uLightCol[i]);
 	}
 	
-	rtDiffuseMapSample = vec4(1.0,0.0,0.0,1.0);
-
-	rtDiffuseLightTotal = vec4(0.0,0.0,1.0,1.0);
-	rtSpecularLightTotal = vec4(0.0,1.0,0.0,1.0);
-
 	// add up phong
 	phong = findAmbient() + diffuseAccum + specularAccum;
 	
@@ -141,7 +148,6 @@ vec4 findPhong()
 
 void main()
 {
-	
 	// get phong
 	vec4 accum = findPhong();
 
