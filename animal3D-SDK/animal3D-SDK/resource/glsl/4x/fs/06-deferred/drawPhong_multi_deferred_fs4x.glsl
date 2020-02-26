@@ -45,18 +45,18 @@ uniform sampler2D uImage02; //normal
 uniform sampler2D uImage03; //texcoord
 uniform sampler2D uImage04; //diffuse map
 uniform sampler2D uImage05;	//specular map
+uniform sampler2D uImage06; //
+uniform sampler2D uImage07;	//
 uniform vec4 uColor;
 uniform vec4[4] uLightPos;
 uniform vec4[4] uLightCol;
 uniform float[4] uLightSz;
 uniform int uLightCt;
 
-in vbLightingData {
-	vec4 vViewPosition;
-	vec4 vViewNormal;
-	vec4 vTexcoord;
-	vec4 vBiasedClipCoord;
-};
+in vec4 vViewPosition;
+in vec4 vViewNormal;
+in vec4 vTexcoord;
+//in vec4 vBiasedClipCoord;
 
 layout (location = 0) out vec4 rtFragColor;
 layout (location = 4) out vec4 rtDiffuseMapSample;
@@ -65,7 +65,7 @@ layout (location = 6) out vec4 rtDiffuseLightTotal;
 layout (location = 7) out vec4 rtSpecularLightTotal;
 
 float aExp = 64.0;
-float ka = 1.0, kd = 1.0, ks = 1.0;
+float ka = 0.01, kd = 1.0, ks = 1.0;
 
 // Calculate specularity
 vec4 findSpecular(vec4 lPos, vec4 lCol)
@@ -73,14 +73,19 @@ vec4 findSpecular(vec4 lPos, vec4 lCol)
 	// get correct coord
 	vec4 actCoord = texture(uImage03, vTexcoord.xy);
 	   
+	// Calc position here
+	float depth = texture(uImage00, vTexcoord.xy).x;
+	vec4 pos = uPB_inv * vec4(vTexcoord.xy,depth,1.0);
+	pos *= 1/pos.a;
+
 	// get normalized view vector
-	vec4 viewVec = normalize(vViewPosition);
+	vec4 viewVec = -normalize(pos);
 
 	// get normalized reflection vector
-	vec4 refVec = normalize(lPos - vViewPosition);
+	vec4 refVec = normalize(lPos - viewVec);
 	
 	// get normal from map and uncompress
-	vec4 normSamp = texture(uImage02, actCoord.xy);
+	vec4 normSamp = texture(uImage02, vTexcoord.xy);
 	vec4 newNorm = (normSamp-0.5)*2.0;
 	refVec = reflect(refVec, newNorm);
 	
@@ -88,11 +93,8 @@ vec4 findSpecular(vec4 lPos, vec4 lCol)
 	float res = max(dot(viewVec, refVec), 0.0);
 	res = pow(res, aExp);
 
-	// sample spec map
-	vec4 specSamp = texture(uImage05, actCoord.xy);
-
 	// Return the dot product
-	return ks * res * lCol * specSamp;
+	return ks * res * lCol;
 }
 
 // Calculate diffuse lighting
@@ -100,22 +102,23 @@ vec4 findLight(vec4 lPos, vec4 lCol)
 {
 	// get correct coord
 	vec4 actCoord = texture(uImage03, vTexcoord.xy);
-	
-	// get normalized light direction
-	vec4 lDir = normalize(lPos - vViewPosition);
+	   
+	// Calc position here
+	float depth = texture(uImage00, vTexcoord.xy).x;
+	vec4 pos = uPB_inv * vec4(vTexcoord.xy,depth,1.0);
+	pos *= 1/pos.a;
+
+	// get normalized light vector
+	vec4 lDir = normalize(lPos - pos);
 
 	// get normal from map and uncompress
-	vec4 normSamp = texture(uImage02, actCoord.xy);
+	vec4 normSamp = texture(uImage02, vTexcoord.xy);
 	vec4 newNorm = (normSamp-0.5)*2.0;
 
-	// get the dot product w a min of 0
 	float res = max(dot(newNorm, lDir), 0.0);
 
-	// sample diff map
-	vec4 diffSamp = texture(uImage04, actCoord.xy);
-
 	// Return the dot product with light and size considered
-	return kd * res * lCol * diffSamp;
+	return kd * res * lCol;
 }
 
 // Calculate ambient lighting
@@ -140,18 +143,36 @@ vec4 findPhong()
 		specularAccum += findSpecular(uLightPos[i], uLightCol[i]);
 	}
 	
+	rtDiffuseLightTotal  = vec4(diffuseAccum.xyz, 1.0);
+	rtSpecularLightTotal = vec4(specularAccum.xyz,1.0);
+	
 	// add up phong
-	phong = findAmbient() + diffuseAccum + specularAccum;
+	phong = findAmbient() + diffuseAccum * rtDiffuseMapSample + specularAccum * rtSpecularMapSample;
 	
 	return phong;
 }
 
 void main()
 {
+	// get correct coord
+	vec4 actCoord = texture(uImage03, vTexcoord.xy);
+
+	// Sample Maps
+	vec4 diffSamp = texture(uImage04, actCoord.xy);
+	rtDiffuseMapSample = vec4(diffSamp.xyz,1.0);
+
+	vec4 specSamp = texture(uImage05, actCoord.xy);
+	rtSpecularMapSample = vec4(specSamp.xyz,1.0);
+
 	// get phong
 	vec4 accum = findPhong();
 
+	//rtDiffuseMapSample   = vec4(1.0,0.0,0.0,1.0);
+	//rtSpecularMapSample  = vec4(1.0,0.0,1.0,1.0);
+	//rtDiffuseLightTotal  = vec4(0.0,1.0,1.0,1.0);
+	//rtSpecularLightTotal = vec4(0.0,1.0,0.0,1.0);
+	
 	// output new color
-	rtFragColor = accum;
-	//rtFragColor = actTexCoord;
+	rtFragColor = vec4(accum.xyz,1.0);
+	//rtFragColor = vec4(,1.0);
 }
