@@ -41,7 +41,77 @@
 //	6) draw tangent bases
 //	7) draw wireframe
 
+uniform mat4 uP;
+uniform vec4 uColor;
+uniform float uSize;
+uniform int uFlag;
+
+layout(triangles) in; //1
+
+in vbVertexData {
+	mat4 vTangentBasis_view;
+	vec4 vTexcoord_atlas;
+	flat int vVertexID, vInstanceID, vModelID;
+} inVertexData[];
+
+layout (line_strip, max_vertices=MAX_VERTICES) out;
+
+out vec4 vColor;
+
+void DrawWireframe()
+{
+	vColor = uColor;
+
+	gl_Position = gl_in[0].gl_Position;
+	EmitVertex();
+
+	gl_Position = gl_in[1].gl_Position;
+	EmitVertex();
+
+	gl_Position = gl_in[2].gl_Position;
+	EmitVertex();
+
+	gl_Position = gl_in[0].gl_Position;
+	EmitVertex();
+
+	EndPrimitive();
+}
+
+void DrawTangentNormals()
+{
+	vColor = vec4 (0.0,0.0,0.0,1.0);
+	mat4 tanBasis;
+
+	for (int i = 0; i < 3; i++)
+	{
+		tanBasis = mat4(
+			normalize(inVertexData[i].vTangentBasis_view[0]),
+			normalize(inVertexData[i].vTangentBasis_view[1]),
+			normalize(inVertexData[i].vTangentBasis_view[2]),
+			inVertexData[i].vTangentBasis_view[3]
+		);
+		
+		for(int j=0; j < 3; j++)
+		{
+			vColor[j] = 1;
+			gl_Position = gl_in[i].gl_Position;
+			EmitVertex();
+
+			gl_Position = uP * (tanBasis[3] + tanBasis[j] * uSize);
+			EmitVertex();
+
+			EndPrimitive();
+			vColor[j] = 0;
+		}
+	}
+}
+
 void main()
 {
-	
+	// uFlag = 3 = 0x0011 & 0x0010
+	if ((uFlag & 2) == 2)
+		DrawWireframe();
+
+	if ((uFlag & 1) == 1)
+		DrawTangentNormals();
 }

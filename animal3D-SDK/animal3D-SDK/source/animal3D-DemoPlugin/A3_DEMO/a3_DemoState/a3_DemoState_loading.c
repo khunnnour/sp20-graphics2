@@ -503,8 +503,8 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 
 			// gs
 			// 07-curves
-			{ { { 0 },	"shdr-gs:draw-curve-segment",		a3shader_geometry,	1,{ A3_DEMO_GS"07-curves/e/drawCurveSegment_gs4x.glsl" } } },
-			{ { { 0 },	"shdr-gs:draw-overlays-tb-wire",	a3shader_geometry,	1,{ A3_DEMO_GS"07-curves/e/drawOverlays_tangents_wireframe_gs4x.glsl" } } },
+			{ { { 0 },	"shdr-gs:draw-curve-segment",		a3shader_geometry,	1,{ A3_DEMO_GS"07-curves/drawCurveSegment_gs4x.glsl" } } },
+			{ { { 0 },	"shdr-gs:draw-overlays-tb-wire",	a3shader_geometry,	1,{ A3_DEMO_GS"07-curves/drawOverlays_tangents_wireframe_gs4x.glsl" } } },
 
 			// fs
 			// base

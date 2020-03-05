@@ -43,6 +43,40 @@
 //	6) write interpolation functions to help with sampling
 //	7) select curve type and sample over [0, 1] interval
 
+uniform int uFlag;
+uniform int uIndex;
+uniform int uCount;
+uniform double uTime;
+uniform vec4 uColor;
+uniform mat4 uMVP;
+
+in vbVertexData {
+	mat4 vTangentBasis_view;
+	vec4 vTexcoord_atlas;
+	flat int vVertexID, vInstanceID, vModelID;
+} inVertexData[];
+
+layout (line_strip, max_vertices=MAX_VERTICES) out;
+
+out vec4 vColor;
+
+vec4 lerp(vec4 A, vec4 B, float t)
+{
+	return mix(A, B, t);
+}
+
+vec4 quadBez(vec4 A, vec4 B, vec4 C, float t)
+{
+	vec4 D = mix(A, B, t); // D = A + t(B - A)
+	vec4 E = mix(B, C, t); // E = B + t(C - B)
+	
+	vec4 P = mix(D, E, t); // P = D + t(E - D)
+	
+	return P;
+}
+
+
+
 void main()
 {
 	
