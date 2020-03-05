@@ -238,6 +238,7 @@
     <None Include="..\..\..\resource\glsl\4x\fs\06-deferred\drawPhongComposite_fs4x.glsl" />
     <None Include="..\..\..\resource\glsl\4x\fs\06-deferred\drawPhongVolume_fs4x.glsl" />
     <None Include="..\..\..\resource\glsl\4x\fs\06-deferred\drawPhong_multi_deferred_fs4x.glsl" />
+    <None Include="..\..\..\resource\glsl\4x\fs\0m-midterm\drawInterior_fs4x.glsl" />
     <None Include="..\..\..\resource\glsl\4x\fs\drawColorAttrib_fs4x.glsl" />
     <None Include="..\..\..\resource\glsl\4x\fs\drawColorUnif_fs4x.glsl" />
     <None Include="..\..\..\resource\glsl\4x\vs\02-shading\passLightingData_transform_vs4x.glsl" />

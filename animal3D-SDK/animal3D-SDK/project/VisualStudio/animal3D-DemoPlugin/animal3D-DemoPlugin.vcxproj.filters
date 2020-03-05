@@ -94,6 +94,9 @@
     <Filter Include="Resource Files\A3_DEMO\glsl\4x\vs\06-deferred">
       <UniqueIdentifier>{d15f0b22-54ec-4cc8-a550-1d7cb625c0b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\A3_DEMO\glsl\4x\fs\0m-midterm">
+      <UniqueIdentifier>{d7ede88c-7b09-4461-8844-c6526e7bc3dd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="_src_win\main_dll.c">
@@ -273,6 +276,9 @@
     </None>
     <None Include="..\..\..\resource\glsl\4x\fs\06-deferred\drawPhongComposite_fs4x.glsl">
       <Filter>Resource Files\A3_DEMO\glsl\4x\fs\06-deferred</Filter>
+    </None>
+    <None Include="..\..\..\resource\glsl\4x\fs\0m-midterm\drawInterior_fs4x.glsl">
+      <Filter>Resource Files\A3_DEMO\glsl\4x\fs\0m-midterm</Filter>
     </None>
   </ItemGroup>
 </Project>

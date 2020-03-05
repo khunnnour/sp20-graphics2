@@ -106,7 +106,7 @@ extern "C"
 		demoStateMaxCount_vertexArray = 8,
 		demoStateMaxCount_drawable = 16,
 
-		demoStateMaxCount_shaderProgram = 32,
+		demoStateMaxCount_shaderProgram = 33,
 		demoStateMaxCount_uniformBuffer = demoStateMaxCount_lightUniformBuffer,
 
 		demoStateMaxCount_texture = 16,
@@ -338,6 +338,8 @@ extern "C"
 					prog_drawPhong_multi_deferred[1],			// draw Phong shading model, multiple lights, in deferred pass
 					prog_drawPhongVolume_instanced[1],			// draw Phong light volume (point light)
 					prog_drawPhongComposite[1];					// draw Phong shading model by compositing light volumes
+				a3_DemoStateShaderProgram
+					prog_drawInterior[1];						// draw interior mapping
 			};
 		};
 
