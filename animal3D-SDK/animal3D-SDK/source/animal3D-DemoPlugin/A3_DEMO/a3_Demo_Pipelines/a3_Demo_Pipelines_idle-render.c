@@ -595,9 +595,6 @@ void a3pipelines_render(a3_DemoState const* demoState, a3_Demo_Pipelines const* 
 		break;
 
 	case pipelines_deferred_shading:
-		// ****TO-DO: 
-		//	-> 3.1a: uncomment deferred shading composite
-		
 		// use deferred shading program
 		currentDemoProgram = demoState->prog_drawPhong_multi_deferred;
 		a3shaderProgramActivate(currentDemoProgram->program);
@@ -622,9 +619,6 @@ void a3pipelines_render(a3_DemoState const* demoState, a3_Demo_Pipelines const* 
 		break;
 
 	case pipelines_deferred_lighting:
-		// ****TO-DO: 
-		//	-> 5.1a: uncomment deferred lighting composite
-		
 		// use deferred lighting composite program
 		currentDemoProgram = demoState->prog_drawPhongComposite;
 		a3shaderProgramActivate(currentDemoProgram->program);

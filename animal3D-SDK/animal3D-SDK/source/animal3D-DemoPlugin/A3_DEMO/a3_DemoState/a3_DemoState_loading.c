@@ -660,17 +660,11 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.drawTexture_blendScreen4_fs->shader);
 
 	// 06-deferred programs: 
-	// ****TO-DO: 
-	//	-> 2.1a: uncomment g-buffer program
-	
 	// draw lighting data as g-buffers
 	currentDemoProg = demoState->prog_drawLightingData;
 	a3shaderProgramCreate(currentDemoProg->program, "prog:draw-lightingdata");
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.passLightingData_transform_bias_vs->shader);
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.drawLightingData_fs->shader);
-	
-	// ****TO-DO: 
-	//	-> 3.1a: uncomment deferred shading composite program
 	
 	// draw Phong shading deferred
 	currentDemoProg = demoState->prog_drawPhong_multi_deferred;
@@ -678,17 +672,11 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.passAtlasTexcoord_transform_vs->shader);
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.drawPhong_multi_deferred_fs->shader);
 	
-	// ****TO-DO: 
-	//	-> 4.1a: uncomment deferred light volume program
-	
 	// draw Phong light volume
 	currentDemoProg = demoState->prog_drawPhongVolume_instanced;
 	a3shaderProgramCreate(currentDemoProg->program, "prog:draw-Phong-volume-inst");
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.passBiasedClipCoord_transform_instanced_vs->shader);
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.drawPhongVolume_fs->shader);
-	
-	// ****TO-DO: 
-	//	-> 5.1a: uncomment deferred lighting composite program
 	
 	// draw composited Phong shading model
 	currentDemoProg = demoState->prog_drawPhongComposite;
@@ -696,11 +684,12 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.passAtlasTexcoord_transform_vs->shader);
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.drawPhongComposite_fs->shader);
 	
+	// 0m-midterm
 	// draw interior mapping
 	currentDemoProg = demoState->prog_drawInterior;
-	a3shaderProgramCreate(currentDemoProg->program, "prog:draw-Phong-composite");
+	a3shaderProgramCreate(currentDemoProg->program, "prog:draw-interior");
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.passAtlasTexcoord_transform_vs->shader);
-	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.drawPhongComposite_fs->shader);
+	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.drawInterior_fs->shader);
 
 	// activate a primitive for validation
 	// makes sure the specified geometry can draw using programs

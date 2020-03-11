@@ -18,32 +18,14 @@
 	animal3D SDK: Minimal 3D Animation Framework
 	By Daniel S. Buckstein
 	
-	drawLightingData_fs4x.glsl
-	Draw attribute data received from vertex shader directly to targets.
+	drawInterior_fs4x.glsl
+	Draw interior mapping.
 */
 
-#version 410
-
-// ****TO-DO: 
-//	1) declare varyings to receive attribute data
-//	2) declare render targets to display attribute data
-//	3) copy attribute data from varying to respective render targets, 
-//		transforming data accordingly
-
-layout (location = 1) out vec4 rtViewPosition;
-layout (location = 2) out vec4 rtViewNormal;
-layout (location = 3) out vec4 rtAtlasTexcoord;
-
-in vbLightingData {
-	vec4 vViewPosition;
-	vec4 vViewNormal;
-	vec4 vTexcoord;
-	vec4 vBiasedClipCoord;
-};
+out vec4 rtFragColor;
 
 void main()
 {
-	rtViewPosition = vViewPosition;
-	rtViewNormal = 0.5*normalize(vViewNormal)+0.5;
-	rtAtlasTexcoord = vTexcoord;
+	// DUMMY OUTPUT; SHOULD MAKE THINGS MAGENTA OR SOMETHING
+	rtFragColor = vec4(1.0,0.0,1.0,1.0);
 }
