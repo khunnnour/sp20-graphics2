@@ -56,9 +56,9 @@ void main()
 	vec4 viewDirection = vTexCoord-vViewPos;
 	vec3 col = map(viewDirection);
 
-	// rtFragColor = vec4(col, 1.0);
+	 rtFragColor = vec4(col, 1.0);
 	// DUMMY OUTPUT; SHOULD MAKE THINGS MAGENTA OR SOMETHING
-	rtFragColor = vec4(1.0,0.0,1.0,1.0);
+	//rtFragColor = vec4(1.0,0.,1.0,1.0);
 }
 
 vec3 map(vec4 viewDir) 

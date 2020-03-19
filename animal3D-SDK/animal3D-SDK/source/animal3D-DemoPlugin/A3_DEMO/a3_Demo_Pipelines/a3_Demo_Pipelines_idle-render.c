@@ -587,7 +587,7 @@ void a3pipelines_render(a3_DemoState const* demoState, a3_Demo_Pipelines const* 
 	{
 	case pipelines_forward:
 		// use simple texturing program
-		currentDemoProgram = demoState->prog_drawTexture;
+		currentDemoProgram = demoState->prog_drawInterior;
 		a3shaderProgramActivate(currentDemoProgram->program);
 		// scene (color)
 		currentReadFBO = readFBO[currentPass][0];
