@@ -596,7 +596,8 @@ void a3pipelines_render(a3_DemoState const* demoState, a3_Demo_Pipelines const* 
 
 	case pipelines_deferred_shading:
 		// use deferred shading program
-		currentDemoProgram = demoState->prog_drawPhong_multi_deferred;
+		currentDemoProgram = demoState->prog_drawInterior;
+		//currentDemoProgram = demoState->prog_drawPhong_multi_deferred;
 		a3shaderProgramActivate(currentDemoProgram->program);
 		// scene (g-buffers)
 		currentReadFBO = readFBO[currentPass][0];

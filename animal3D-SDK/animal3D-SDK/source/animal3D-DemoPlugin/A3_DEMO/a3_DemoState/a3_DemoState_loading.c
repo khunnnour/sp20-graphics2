@@ -688,6 +688,7 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 	// draw interior mapping
 	currentDemoProg = demoState->prog_drawInterior;
 	a3shaderProgramCreate(currentDemoProg->program, "prog:draw-interior");
+	//a3shaderProgramAttachShader(currentDemoProg->program, shaderList.passLightingData_transform_vs->shader);
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.passTexcoord_transform_vs->shader);
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.drawInterior_fs->shader);
 
