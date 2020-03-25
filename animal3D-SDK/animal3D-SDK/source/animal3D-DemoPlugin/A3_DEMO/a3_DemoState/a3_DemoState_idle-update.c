@@ -63,8 +63,8 @@ inline void a3demo_applyScale_internal(a3_DemoSceneObject *sceneObject, a3real4x
 //-----------------------------------------------------------------------------
 // UPDATE SUB-ROUTINES
 
-// scene update
-void a3demo_update_scene(a3_DemoState *demoState, a3f64 dt)
+// update for main render pipeline
+void a3demo_update_main(a3_DemoState *demoState, a3f64 dt)
 {
 	a3ui32 i;
 
@@ -167,10 +167,6 @@ void a3demo_update_scene(a3_DemoState *demoState, a3f64 dt)
 
 
 	// update lights
-	pointLight = demoState->forwardPointLight;
-	pointLight->worldPos.xyz = demoState->mainLightObject->position;
-
-	// update lights view positions for current camera
 	for (i = 0, pointLight = demoState->forwardPointLight + i;
 		i < demoState->forwardLightCount;
 		++i, ++pointLight)
@@ -210,20 +206,13 @@ void a3demo_update_scene(a3_DemoState *demoState, a3f64 dt)
 //-----------------------------------------------------------------------------
 // UPDATE
 
-void a3pipelines_update(a3_DemoState* demoState, a3_Demo_Pipelines* demoMode, a3f64 dt);
-
 void a3demo_update(a3_DemoState *demoState, a3f64 dt)
 {
-	// update scene
-	a3demo_update_scene(demoState, dt);
-
-	// update for specific mode
 	switch (demoState->demoMode)
 	{
-	case demoState_shading:
-		break;
-	case demoState_pipelines:
-		a3pipelines_update(demoState, demoState->demoMode_pipelines, dt);
+		// main render pipeline
+	case demoStateMode_main:
+		a3demo_update_main(demoState, dt);
 		break;
 	}
 }

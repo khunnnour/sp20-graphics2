@@ -40,11 +40,8 @@
 //-----------------------------------------------------------------------------
 // other demo includes
 
-#include "_a3_demo_utilities/a3_DemoSceneObject.h"
-#include "_a3_demo_utilities/a3_DemoShaderProgram.h"
-
-#include "a3_Demo_Shading.h"
-#include "a3_Demo_Pipelines.h"
+#include "_utilities/a3_DemoSceneObject.h"
+#include "_utilities/a3_DemoShaderProgram.h"
 
 
 //-----------------------------------------------------------------------------
@@ -54,64 +51,64 @@ extern "C"
 {
 #else	// !__cplusplus
 	typedef struct a3_DemoState					a3_DemoState;
-	typedef enum a3_DemoState_ModeName			a3_DemoState_ModeName;
-	typedef enum a3_DemoState_TextDisplayName	a3_DemoState_TextDisplayName;
 #endif	// __cplusplus
 
 
 //-----------------------------------------------------------------------------
 
-	// demo mode names
-	enum a3_DemoState_ModeName
-	{
-		demoState_shading,				// basic shading mode
-		demoState_pipelines,			// different pipelines for exploration
-
-		demoState_mode_max
-	};
-
-
-	// text mode names
-	enum a3_DemoState_TextDisplayName
-	{
-		demoState_textDisabled,			// no text overlay
-		demoState_textControls,			// display controls
-		demoState_textControls_gen,		// display general controls
-		demoState_textData,				// display data
-
-		demoState_text_max
-	};
-
-
 	// object maximum counts for easy array storage
 	// good idea to make these numbers greater than what you actually need 
 	//	and if you end up needing more just increase the count... there's 
 	//	more than enough memory to hold extra objects
-	enum a3_DemoState_ObjectMaxCount
+	enum a3_DemoStateObjectMaxCounts
 	{
 		demoStateMaxCount_sceneObject = 8,
 		demoStateMaxCount_cameraObject = 1,
 		demoStateMaxCount_lightObject = 4,
-		demoStateMaxCount_projector = 2,
-
-		demoStateMaxCount_lightUniformBufferType = 4,
-		demoStateMaxCount_lightVolumeBlock = 4,
-		demoStateMaxCount_lightVolumePerBlock = a3index_countMaxShort / sizeof(a3_DemoPointLight),
-		demoStateMaxCount_lightVolume = demoStateMaxCount_lightVolumeBlock * demoStateMaxCount_lightVolumePerBlock,
-		demoStateMaxCount_lightUniformBuffer = demoStateMaxCount_lightUniformBufferType * demoStateMaxCount_lightVolumeBlock,
+		demoStateMaxCount_projector = 1,
 
 		demoStateMaxCount_timer = 1,
 
 		demoStateMaxCount_drawDataBuffer = 1,
 		demoStateMaxCount_vertexArray = 8,
 		demoStateMaxCount_drawable = 16,
-
-		demoStateMaxCount_shaderProgram = 33,
-		demoStateMaxCount_uniformBuffer = demoStateMaxCount_lightUniformBuffer,
-
+		
+		demoStateMaxCount_shaderProgram = 16,
+		
 		demoStateMaxCount_texture = 16,
+	};
 
-		demoStateMaxCount_framebuffer = 16,
+	// additional counters for demo modes
+	enum a3_DemoStateModeCounts
+	{
+		demoStateMaxModes = 1,
+		demoStateMaxSubModes = 1,
+		demoStateMaxOutputModes = 1,
+	};
+
+	// demo mode names
+	enum a3_DemoStateModeNames
+	{
+		demoStateMode_main,
+	};
+
+
+//-----------------------------------------------------------------------------
+
+	// pipeline modes
+	enum a3_DemoStatePipelineModeNames
+	{
+		demoStatePipelineMode_forward,
+	};
+
+	// forward shading modes
+	enum a3_DemoStateForwardShadingModeNames
+	{
+		demoStateForwardShadingMode_solid,
+		demoStateForwardShadingMode_texture,
+		demoStateForwardShadingMode_Lambert,
+		demoStateForwardShadingMode_Phong,
+		demoStateForwardShadingMode_nonphoto,
 	};
 
 	
@@ -130,7 +127,7 @@ extern "C"
 		a3i32 verticalAxis;
 
 		// asset streaming between loads enabled (careful!)
-		a3boolean streaming;
+		a3i32 streaming;
 
 		// window and full-frame dimensions
 		a3ui32 windowWidth, windowHeight;
@@ -144,8 +141,7 @@ extern "C"
 		// objects that have known or fixed instance count in the whole demo
 
 		// text renderer
-		a3boolean textInit;
-		a3_DemoState_TextDisplayName textMode;
+		a3i32 textInit, textMode, textModeCount;
 		a3_TextRenderer text[1];
 
 		// input
@@ -160,42 +156,30 @@ extern "C"
 		//---------------------------------------------------------------------
 		// scene variables and objects
 
-		// demo modes
-		a3_Demo_Shading demoMode_shading[1];
-		a3_Demo_Pipelines demoMode_pipelines[1];
-		a3_DemoState_ModeName demoMode;
-
-		// cameras
-		a3ui32 activeCamera;
+		// demo mode array: 
+		//	- mode: which mode/pipeline is being viewed
+		//	- sub-mode: which sub-mode/pass in the pipeline is being viewed
+		//	- output: which output from the sub-mode/pass is being viewed
+		a3ui32 demoMode, demoSubMode[demoStateMaxModes], demoOutputMode[demoStateMaxModes][demoStateMaxSubModes];
+		a3ui32 demoModeCount, demoSubModeCount[demoStateMaxModes], demoOutputCount[demoStateMaxModes][demoStateMaxSubModes];
 
 		// toggle grid in scene and axes superimposed, as well as other mods
-		a3boolean displayGrid, displaySkybox, displayHiddenVolumes, displayPipeline;
-		a3boolean displayWorldAxes, displayObjectAxes, displayTangentBases;
+		a3boolean displayGrid, displayWorldAxes, displayObjectAxes, displayTangentBases;
+		a3boolean displaySkybox, displayHiddenVolumes, displayPipeline;
 		a3boolean updateAnimation;
-		a3boolean stencilTest;
-		a3boolean skipIntermediatePasses;
 
 		// grid properties
 		a3mat4 gridTransform;
 		a3vec4 gridColor;
 
+		// cameras
+		a3ui32 activeCamera;
+
 		// lights
+		a3ui32 lightingPipelineMode;
+		a3ui32 forwardShadingMode, forwardShadingModeCount;
 		a3ui32 forwardLightCount;
-		a3ui32 deferredLightCount, deferredLightBlockCount, deferredLightCountPerBlock[demoStateMaxCount_lightVolumeBlock];
-		
 		a3_DemoPointLight forwardPointLight[demoStateMaxCount_lightObject];
-		a3_DemoPointLight deferredPointLight[demoStateMaxCount_lightVolume];
-
-		a3mat4 deferredLightMVP[demoStateMaxCount_lightVolume], deferredLightMVPB[demoStateMaxCount_lightVolume];
-
-
-		// texture atlas transforms
-		union {
-			a3mat4 atlasTransform[4];
-			struct {
-				a3mat4 atlas_stone[1], atlas_earth[1], atlas_mars[1], atlas_checker[1];
-			};
-		};
 
 
 		//---------------------------------------------------------------------
@@ -208,12 +192,9 @@ extern "C"
 		union {
 			a3_DemoSceneObject sceneObject[demoStateMaxCount_sceneObject];
 			struct {
-				// general scene objects
+				// main scene objects
 				a3_DemoSceneObject
-					skyboxObject[1];
-
-				// interactive scene objects
-				a3_DemoSceneObject
+					skyboxObject[1],
 					planeObject[1],
 					sphereObject[1],
 					cylinderObject[1],
@@ -243,8 +224,6 @@ extern "C"
 			struct {
 				a3_DemoProjector
 					sceneCamera[1];						// scene viewing cameras
-				a3_DemoProjector
-					shadowLight[1];						// light for capturing shadow map
 			};
 		};
 
@@ -307,39 +286,17 @@ extern "C"
 			a3_DemoStateShaderProgram shaderProgram[demoStateMaxCount_shaderProgram];
 			struct {
 				a3_DemoStateShaderProgram
-					prog_transform_instanced[1],				// transform vertex only with instancing; no fragment shader
-					prog_transform[1];							// transform vertex only; no fragment shader
-				a3_DemoStateShaderProgram
 					prog_drawColorAttrib_instanced[1],			// draw color attribute with instancing
 					prog_drawColorUnif_instanced[1],			// draw uniform color with instancing
 					prog_drawColorAttrib[1],					// draw color attribute
 					prog_drawColorUnif[1];						// draw uniform color
+				// ****TO-DO: 
+				//	-> 2.1a: new program declarations
 				a3_DemoStateShaderProgram
 					prog_drawNonphoto_multi[1],					// draw non-photorealistic shading model, multiple lights
 					prog_drawPhong_multi[1],					// draw Phong shading model, multiple lights
 					prog_drawLambert_multi[1],					// draw Lambert shading model, multiple lights
 					prog_drawTexture[1];						// draw texture
-				a3_DemoStateShaderProgram
-					prog_drawTexture_coordManip[1],				// draw texture with manipulated texture coordinates
-					prog_drawTexture_colorManip[1],				// draw texture with manipulated output color
-					prog_drawNonphoto_multi_mrt[1],				// draw non-photorealistic shading model, multiple lights, MRT
-					prog_drawPhong_multi_mrt[1],				// draw Phong shading model, multiple lights, MRT
-					prog_drawLambert_multi_mrt[1],				// draw Lambert shading model, multiple lights, MRT
-					prog_drawTexture_mrt[1];					// draw texture, MRT
-				a3_DemoStateShaderProgram
-					prog_drawTexture_outline[1],				// draw texture with outlines from prior pass
-					prog_drawPhong_multi_shadow_mrt[1];			// draw Phong shading with shadow mapping
-				a3_DemoStateShaderProgram
-					prog_drawTexture_brightPass[1],				// draw texture with bright-pass or tone-mapping
-					prog_drawTexture_blurGaussian[1],			// draw texture with Gaussian blurring
-					prog_drawTexture_blendScreen4[1];			// draw texture with 4-layer screen blend
-				a3_DemoStateShaderProgram
-					prog_drawLightingData[1],					// draw attributes passed from vertex shader (g-buffers)
-					prog_drawPhong_multi_deferred[1],			// draw Phong shading model, multiple lights, in deferred pass
-					prog_drawPhongVolume_instanced[1],			// draw Phong light volume (point light)
-					prog_drawPhongComposite[1];					// draw Phong shading model by compositing light volumes
-				a3_DemoStateShaderProgram
-					prog_drawInterior[1];						// draw interior mapping
 			};
 		};
 
@@ -351,8 +308,6 @@ extern "C"
 				a3_Texture
 					tex_skybox_clouds[1],
 					tex_skybox_water[1],
-					tex_atlas_dm[1],
-					tex_atlas_sm[1],
 					tex_earth_dm[1],
 					tex_earth_sm[1],
 					tex_mars_dm[1],
@@ -365,45 +320,39 @@ extern "C"
 		};
 
 
-		// framebuffers
-		union {
-			a3_Framebuffer framebuffer[demoStateMaxCount_framebuffer];
-			struct {
-				a3_Framebuffer
-					fbo_scene_c16d24s8_mrt[1];					// framebuffer for capturing scene
-				a3_Framebuffer
-					fbo_shadow_d32[1];							// framebuffer for capturing shadow map
-				a3_Framebuffer
-					fbo_post_c16_2fr[3],						// framebuffers for post-processing, half frame size
-					fbo_post_c16_4fr[3],						// framebuffers for post-processing, quarter frame size
-					fbo_post_c16_8fr[3],						// framebuffers for post-processing, eighth frame size
-					fbo_composite_c16[3];						// framebuffers for composition
-			};
-		};
-
-
-		// uniform buffer objects
-		union {
-			a3_UniformBuffer uniformBuffer[demoStateMaxCount_uniformBuffer];
-			struct {
-				// transform uniform buffers
-				a3_UniformBuffer
-					ubo_transformMVPB_light[demoStateMaxCount_lightVolumeBlock],	// MVPB matrices for lights if needed
-					ubo_transformMVP_light[demoStateMaxCount_lightVolumeBlock];		// MVP matrices for lights if needed
-
-				// lighting uniform buffers
-				a3_UniformBuffer
-					ubo_pointLight[demoStateMaxCount_lightVolumeBlock];				// individual light data
-			};
-		};
-
-
 		// managed objects, no touchie
 		a3_VertexDrawable dummyDrawable[1];
 
 
 		//---------------------------------------------------------------------
 	};
+
+	
+//-----------------------------------------------------------------------------
+
+	// demo-related functions
+
+	// idle loop
+	void a3demo_input(a3_DemoState* demoState, a3f64 dt);
+	void a3demo_update(a3_DemoState* demoState, a3f64 dt);
+	void a3demo_render(a3_DemoState const* demoState);
+
+	// loading
+	void a3demo_loadGeometry(a3_DemoState* demoState);
+	void a3demo_loadShaders(a3_DemoState* demoState);
+	void a3demo_loadTextures(a3_DemoState* demoState);
+	void a3demo_refresh(a3_DemoState* demoState);
+
+	// unloading
+	void a3demo_unloadGeometry(a3_DemoState* demoState);
+	void a3demo_unloadShaders(a3_DemoState* demoState);
+	void a3demo_unloadTextures(a3_DemoState* demoState);
+	void a3demo_validateUnload(a3_DemoState const* demoState);
+
+	// other utils & setup
+	void a3demo_setDefaultGraphicsState();
+	void a3demo_initScene(a3_DemoState* demoState);
+	void a3demo_initSceneRefresh(a3_DemoState* demoState);
 
 
 //-----------------------------------------------------------------------------

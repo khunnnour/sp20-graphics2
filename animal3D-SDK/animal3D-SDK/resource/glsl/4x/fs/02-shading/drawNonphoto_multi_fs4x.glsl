@@ -24,17 +24,11 @@
 
 #version 410
 
-// ****TO-DO: 
-//	1) declare uniform variables for textures; see demo code for hints
-//	2) declare uniform variables for lights; see demo code for hints
-//	3) declare inbound varying data
-//	4) implement nonphotorealistic shading model
-//	Note: test all data and inbound values before using them!
-
-uniform sampler2D uImage0;
-uniform vec4[4] uLightPos;
-uniform vec4[4] uLightCol;
-uniform int uLightCt;
+/* *
+ * Code originally by Erik Nordeus for Unity 
+ *  -> https://www.habrador.com/tutorials/shaders/2-interior-mapping/
+ * Modifed for a3/openGL by Conner and Cormac
+ * */
 
 in vec4 vTexCoord;
 in vec4 vViewPos;
@@ -42,49 +36,123 @@ in vec4 vNorm;
 
 out vec4 rtFragColor;
 
-float rampDiff(float r)
-{
-    float minL = 0.05;
-    float cutoff  = 0.5;
-    float stripes = 3.0;
-    
-    float v = step(cutoff, r);
-    
-    if(v==1.0)
-		return ceil((r-cutoff) / (1.0-cutoff) * stripes) / stripes;
-    else
-        return v+minL;
-}
+// Floor dimensions
+const float roomHeight = 0.25;
+const float roomWidth  = 0.25;
+// Colors
+const vec3 wallCol  = vec3(0.9, 0.3, 0.2);
+const vec3 wallCol2 = vec3(0.9, 1.0, 0.9);
+const vec3 roofCol  = vec3(0.2, 0.6, 0.9);
+const vec3 floorCol = vec3(0.4, 0.2, 0.1);
 
-vec4 findLight(vec4 lPos, vec4 lCol)
-{
-	// get normalized light direction
-	vec4 lDir = normalize(lPos - vViewPos);
-
-	// get the dot product w a min of 0
-	float res = max(dot(vNorm, lDir), 0.0);
-
-	// Return the dot product with light considered
-	return rampDiff(res) * lCol;
-}
+// Prototypes
+vec4 checkDistance(vec3 rayDir, vec3 rayStartPos, vec3 planePos, vec3 planeNormal, vec3 color, vec4 colorAndDist);
+vec3 map(vec4 viewDir, vec4 vPos);
 
 void main()
 {
-	// accum var for dot prods
-	vec4 accum = vec4(0.0);
+	// Calcluate the direction to vertex
+	vec4 viewDirection = vTexCoord-vViewPos;
 
-	// iterate over light array
-	for(int i = 0; i < uLightCt; i++)
+	// Actual mapping function
+	vec3 col = map(viewDirection, vTexCoord);
+
+	rtFragColor = vec4(col, 1.0);
+	// DUMMY OUTPUT; SHOULD MAKE THINGS MAGENTA OR SOMETHING
+	//rtFragColor = vec4(1.0,0.,0.0,1.0);
+}
+
+vec3 map(vec4 viewDir, vec4 vPos) 
+{
+	// Direction vectors
+	vec3 upVec = vec3(0, 1, 0);
+	vec3 rightVec = vec3(1, 0, 0);
+	vec3 forwardVec = vec3(0, 0, 1);
+
+	// The view direction of the camera to this fragment in local space
+	vec3 rayDir = normalize(viewDir).xyz;
+
+	// The local position of this fragment
+	vec3 rayStartPos = vPos.xyz;
+
+	// Important to start inside the house or we will display one of the outer walls
+	rayStartPos += rayDir * 0.0001;
+
+	// Init the loop with a vec4 to make it easier to return from a function
+	// colorAndDist.rgb is the color that will be displayed
+	// colorAndDist.w is the shortest distance to a wall so far so we can find which wall is the closest
+	vec4 colorAndDist = vec4(vec3(1,1,1), 100000000.0);
+
+	// Intersection 1: Wall / roof (y)
+	// Camera is looking up if the dot product is > 0 = Roof
+	if (dot(upVec, rayDir) > 0)
+	{				
+		//The local position of the roof
+		vec3 wallPos = (ceil(rayStartPos.y / roomHeight) * roomHeight) * upVec;
+
+		//Check if the roof is intersecting with the ray, if so set the color and the distance to the roof and return it
+		colorAndDist = checkDistance(rayDir, rayStartPos, wallPos, upVec, roofCol, colorAndDist);
+	}
+	// Floor
+	else
 	{
-		// accumulate light and color
-		accum += findLight(uLightPos[i], uLightCol[i]);
+		vec3 wallPos = ((ceil(rayStartPos.y / roomHeight) - 1.0) * roomHeight) * upVec;
+
+		colorAndDist = checkDistance(rayDir, rayStartPos, wallPos, upVec * -1, floorCol, colorAndDist);
+	}
+	
+
+	// Intersection 2: Right wall (x)
+	if (dot(rightVec, rayDir) > 0)
+	{
+		vec3 wallPos = (ceil(rayStartPos.x / roomWidth) * roomWidth) * rightVec;
+
+		colorAndDist = checkDistance(rayDir, rayStartPos, wallPos, rightVec, wallCol, colorAndDist);
+	}
+	else
+	{
+		vec3 wallPos = ((ceil(rayStartPos.x / roomWidth) - 1.0) * roomWidth) * rightVec;
+
+		colorAndDist = checkDistance(rayDir, rayStartPos, wallPos, rightVec * -1, wallCol, colorAndDist);
 	}
 
-	// sample the texture
-	vec4 texSample = texture2D(uImage0, vTexCoord.xy);
 
-	rtFragColor = accum * texSample;
+	// Intersection 3: Forward wall (z)
+	if (dot(forwardVec, rayDir) > 0)
+	{
+		vec3 wallPos = (ceil(rayStartPos.z / roomWidth) * roomWidth) * forwardVec;
 
-	// DUMMY OUTPUT: all fragments are OPAQUE BLUE
-	// rtFragColor = vec4(0.0, 0.0, 1.0, 1.0);
+		colorAndDist = checkDistance(rayDir, rayStartPos, wallPos, forwardVec, wallCol2, colorAndDist);
+	}
+	else
+	{
+		vec3 wallPos = ((ceil(rayStartPos.z / roomWidth) - 1.0) * roomWidth) * forwardVec;
+
+		colorAndDist = checkDistance(rayDir, rayStartPos, wallPos, forwardVec * -1, wallCol2, colorAndDist);
+	}
+		
+	// Output
+	return colorAndDist.rgb;
+}
+
+// Calculate the distance between the ray start position and where it's intersecting with the plane
+// If this distance is shorter than the previous best distance, the save it and the color belonging to the wall and return it
+vec4 checkDistance(vec3 rayDir, vec3 rayStartPos, vec3 planePos, vec3 planeNormal, vec3 color, vec4 colorAndDist)
+{
+	// Get the distance to the plane with ray-plane intersection
+	// http://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection
+	// We are always intersecting with the plane so we dont need to spend time checking that			
+	float t = dot(planePos - rayStartPos, planeNormal) / dot(planeNormal, rayDir);
+
+	// If the distance is closer to the camera than the previous best distance
+	if (t < colorAndDist.w)
+	{
+		// This distance is now the best distance
+		colorAndDist.w = t;
+
+		// Set the color that belongs to this wall
+		colorAndDist.rgb = color;
+	}
+
+	return colorAndDist;
 }
