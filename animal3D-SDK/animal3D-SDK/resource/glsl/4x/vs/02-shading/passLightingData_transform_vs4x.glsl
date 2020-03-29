@@ -46,17 +46,33 @@ uniform mat4 uAtlas;
 layout (location = 0) in vec4 aPosition;
 layout (location = 2) in vec4 aNormal;
 layout (location = 8) in vec4 aTexCoord;
+layout (location = 10)  in vec4 aTangent;
+layout (location = 11)  in vec4 aBitangent;
 
 out vec4 vTexCoord;
 out vec4 vViewPos;
 out vec4 vNorm;
+out vec4 vTan;
+out vec4 vBiTan;
+out vec4 vViewDir;
 
 void main()
 {
 	vViewPos = uMV * aPosition;
 	vNorm = normalize(uMV_nrm * aNormal);
-	
 	vTexCoord = uAtlas * aTexCoord;
+
+	// get tangent space camera vector
+    vec3 viewDir = aPosition.xyz - vViewPos.xyz;
+    viewDir = vec3(
+        dot(viewDir, aTangent.xyz),
+        dot(viewDir, aBitangent.xyz),
+        dot(viewDir, vNorm.xyz)
+        );
+
+	vTan   = aTangent;
+	vBiTan = aBitangent;
+	vViewDir = vec4(viewDir,1.0);
 
 	gl_Position = uP * vViewPos;
 }

@@ -469,7 +469,7 @@ void a3demo_render_main(const a3_DemoState *demoState,
 			//	- modelview for normals
 			//	- per-object animation data
 			for (k = 0,
-				currentSceneObject = demoState->planeObject, endSceneObject = demoState->teapotObject;
+				currentSceneObject = demoState->planeObject, endSceneObject = demoState->sphereObject;
 				currentSceneObject <= endSceneObject;
 				++k, ++currentSceneObject)
 			{

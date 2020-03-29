@@ -30,45 +30,69 @@
  * Modifed for a3/openGL by Conner and Cormac
  * */
 
+uniform mat4 uMVP;
+uniform samplerCube uImage0;
+uniform double uTime;
+
 in vec4 vTexCoord;
 in vec4 vViewPos;
 in vec4 vNorm;
+in vec4 vTan;
+in vec4 vBiTan;
+in vec4 vViewDir;
 
 out vec4 rtFragColor;
 
 // Floor dimensions
-const float roomHeight = 0.25;
-const float roomWidth  = 0.25;
+const float roomHeight = 0.1;
+const float roomWidth  = 0.1;
+const float roomDepth  = 0.2;
 // Colors
 const vec3 wallCol  = vec3(0.9, 0.3, 0.2);
 const vec3 wallCol2 = vec3(0.9, 1.0, 0.9);
 const vec3 roofCol  = vec3(0.2, 0.6, 0.9);
-const vec3 floorCol = vec3(0.4, 0.2, 0.1);
+const vec3 floorCol = vec3(0.3, 0.8, 0.5);
 
 // Prototypes
 vec4 checkDistance(vec3 rayDir, vec3 rayStartPos, vec3 planePos, vec3 planeNormal, vec3 color, vec4 colorAndDist);
 vec3 map(vec4 viewDir, vec4 vPos);
+vec2 sampleCube(const vec3 v, out float faceIndex);
 
 void main()
 {
 	// Calcluate the direction to vertex
-	vec4 viewDirection = vTexCoord-vViewPos;
+	vec4 viewDirection = inverse(uMVP)*(vTexCoord - vViewPos);
+	//float amp = 5.0;
+	//vec4 viewDirection = vTexCoord - vec4(amp*cos(float(uTime)),amp*sin(float(uTime)),20.0,1.0);
 
-	// Actual mapping function
+	// Actual mapping functionw
+	//vec3 col = map(vViewDir, vTexCoord);
 	vec3 col = map(viewDirection, vTexCoord);
 
 	rtFragColor = vec4(col, 1.0);
-	// DUMMY OUTPUT; SHOULD MAKE THINGS MAGENTA OR SOMETHING
-	//rtFragColor = vec4(1.0,0.,0.0,1.0);
+	// DUMMY OUTPUT
+	//rtFragColor = vec4(vViewPos.xyz,1.0);
 }
 
 vec3 map(vec4 viewDir, vec4 vPos) 
 {
+	/*
+	// Get fragment face normal
+	vec3 fragNorm = vNorm.xyz;
+	
+	// Direction vectors
+	vec3 forwardVec = -fragNorm;
+	// rotate normal up 90deg
+	vec3 upVec		= vec3(forwardVec.x, -forwardVec.z, forwardVec.y);
+	// rotate normal right 90deg
+	vec3 rightVec   = vec3(forwardVec.z, forwardVec.y, -forwardVec.x);
+	*/
+	
 	// Direction vectors
 	vec3 upVec = vec3(0, 1, 0);
 	vec3 rightVec = vec3(1, 0, 0);
 	vec3 forwardVec = vec3(0, 0, 1);
-
+	
 	// The view direction of the camera to this fragment in local space
 	vec3 rayDir = normalize(viewDir).xyz;
 
@@ -120,19 +144,64 @@ vec3 map(vec4 viewDir, vec4 vPos)
 	// Intersection 3: Forward wall (z)
 	if (dot(forwardVec, rayDir) > 0)
 	{
-		vec3 wallPos = (ceil(rayStartPos.z / roomWidth) * roomWidth) * forwardVec;
+		vec3 wallPos = (ceil(rayStartPos.z / roomDepth) * roomDepth) * forwardVec;
 
 		colorAndDist = checkDistance(rayDir, rayStartPos, wallPos, forwardVec, wallCol2, colorAndDist);
 	}
 	else
 	{
-		vec3 wallPos = ((ceil(rayStartPos.z / roomWidth) - 1.0) * roomWidth) * forwardVec;
+		vec3 wallPos = ((ceil(rayStartPos.z / roomDepth) - 1.0) * roomDepth) * forwardVec;
 
 		colorAndDist = checkDistance(rayDir, rayStartPos, wallPos, forwardVec * -1, wallCol2, colorAndDist);
 	}
-		
+	
 	// Output
 	return colorAndDist.rgb;
+	
+	/*
+	// room uvs
+	vec2 roomUV = vTexCoord.xy;
+ 
+    // raytrace box from tangent view dir
+    vec3 pos = vec3((roomUV * 2.0 - 1.0), 1.0);
+    vec3 id = 1.0 / viewDir.xyz;
+    vec3 k = abs(id) - pos * id;
+    float kMin = min(min(k.x, k.y), k.z);
+    pos += kMin * viewDir.xyz;
+
+	float index;
+	vec2 sampleCoord = sampleCube(pos,index);
+
+	return texture(uImage0, pos).xyz;
+	*/
+}
+
+vec2 sampleCube(
+    const vec3 v,
+    out float faceIndex)
+{
+	vec3 vAbs = abs(v);
+	float ma;
+	vec2 uv;
+	if(vAbs.z >= vAbs.x && vAbs.z >= vAbs.y)
+	{
+		faceIndex = v.z < 0.0 ? 5.0 : 4.0;
+		ma = 0.5 / vAbs.z;
+		uv = vec2(v.z < 0.0 ? -v.x : v.x, -v.y);
+	}
+	else if(vAbs.y >= vAbs.x)
+	{
+		faceIndex = v.y < 0.0 ? 3.0 : 2.0;
+		ma = 0.5 / vAbs.y;
+		uv = vec2(v.x, v.y < 0.0 ? -v.z : v.z);
+	}
+	else
+	{
+		faceIndex = v.x < 0.0 ? 1.0 : 0.0;
+		ma = 0.5 / vAbs.x;
+		uv = vec2(v.x < 0.0 ? v.z : -v.z, -v.y);
+	}
+	return uv * ma + 0.5;
 }
 
 // Calculate the distance between the ray start position and where it's intersecting with the plane
