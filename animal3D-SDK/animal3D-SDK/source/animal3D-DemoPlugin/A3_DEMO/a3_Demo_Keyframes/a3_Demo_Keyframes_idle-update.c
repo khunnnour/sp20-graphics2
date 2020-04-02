@@ -145,6 +145,11 @@ void a3keyframes_update(a3_DemoState* demoState, a3_Demo_Keyframes* demoMode, a3
 		demoState->skeletonObject->position = demoState->curveWaypoint[0].xyz;
 	}
 
+	if (demoMode->editingJoint == false)
+	{
+		demoState->hierarchyState_skel->localPose[0].nodePose->translation;
+		demoState->hierarchyState_skel->poseGroup[0]->objectSpace;
+	}
 
 	// update animation: 
 	//	-> copy pose from set to state (pro tip: seems pointless but it is not)
