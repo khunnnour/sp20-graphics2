@@ -145,12 +145,6 @@ void a3keyframes_update(a3_DemoState* demoState, a3_Demo_Keyframes* demoMode, a3
 		demoState->skeletonObject->position = demoState->curveWaypoint[0].xyz;
 	}
 
-	if (demoMode->editingJoint == false)
-	{
-		demoState->hierarchyState_skel->localPose[0].nodePose->translation;
-		demoState->hierarchyState_skel->poseGroup[0]->objectSpace;
-	}
-
 	// update animation: 
 	//	-> copy pose from set to state (pro tip: seems pointless but it is not)
 	//	-> convert the current pose to transforms
@@ -160,6 +154,38 @@ void a3keyframes_update(a3_DemoState* demoState, a3_Demo_Keyframes* demoMode, a3
 	currentHierarchyPoseGroup = currentHierarchyState->poseGroup;
 	currentHierarchy = currentHierarchyPoseGroup->hierarchy;
 
+	if (demoMode->editingJoint == false)
+	{
+		demoState->segmentTime += (a3real)dt;
+		demoState->segmentParam = demoState->segmentTime * demoState->segmentDurationInv;
+
+		// Go to next pose when duration is up
+		if (demoState->segmentParam > 0.99)
+		{
+			demoState->currentPose = (demoState->currentPose + 1) % currentHierarchyPoseGroup->poseCount;
+		}
+
+		a3_HierarchyPose* currentPose = &(currentHierarchyPoseGroup->pose[demoState->currentPose]);
+
+		a3integer nextPoseIndex = (demoState->currentPose + 1) % currentHierarchyPoseGroup->poseCount;
+		a3_HierarchyPose* nextPose = &(currentHierarchyPoseGroup->pose[nextPoseIndex]);
+
+		// cycle through bones
+		for (i = 1; i < currentHierarchy->numNodes; ++i)
+		{
+			// get specific bone from each pose
+			a3_HierarchyNodePose currBone = currentPose->nodePose[i];
+			a3_HierarchyNodePose nextBone = nextPose->nodePose[i];
+
+			a3_HierarchyPose* currentNode = &currentHierarchyPoseGroup->pose[demoState->currentPose];
+
+			// interpolate
+			a3real4Lerp(currentNode->nodePose[i].translation.v, currBone.translation.v, nextBone.translation.v, demoState->segmentParam);
+			a3real4Lerp(currentNode->nodePose[i].orientation.v, currBone.orientation.v, nextBone.orientation.v, demoState->segmentParam);
+			a3real4Lerp(currentNode->nodePose[i].scale.v,		currBone.scale.v,		nextBone.scale.v,		demoState->segmentParam);
+		}
+	}
+	
 	a3hierarchyPoseCopy(currentHierarchyState->localPose,
 		currentHierarchyPoseGroup->pose + 0, currentHierarchy->numNodes);
 	a3hierarchyPoseConvert(currentHierarchyState->localSpace,
