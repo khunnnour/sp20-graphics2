@@ -156,38 +156,47 @@ void a3keyframes_update(a3_DemoState* demoState, a3_Demo_Keyframes* demoMode, a3
 
 	if (demoMode->editingJoint == false)
 	{
-		demoState->segmentTime += (a3real)dt;
-		demoState->segmentParam = demoState->segmentTime * demoState->segmentDurationInv;
+		//demoState->segmentTime += (a3real)dt;
+		//demoState->segmentParam = demoState->segmentTime * demoState->segmentDurationInv;
+
+		// find interpolation value
+		demoState->animationInterp += (a3real)dt / (a3real)5.0;
 
 		// Go to next pose when duration is up
-		if (demoState->segmentParam > 0.99)
+		if (demoState->animationInterp >= 1.0)
 		{
+			demoState->animationInterp = (a3real)0.0;
 			demoState->currentPose = (demoState->currentPose + 1) % currentHierarchyPoseGroup->poseCount;
 		}
 
+		// get current pose
 		a3_HierarchyPose* currentPose = &(currentHierarchyPoseGroup->pose[demoState->currentPose]);
 
+		// get the target pose
 		a3integer nextPoseIndex = (demoState->currentPose + 1) % currentHierarchyPoseGroup->poseCount;
 		a3_HierarchyPose* nextPose = &(currentHierarchyPoseGroup->pose[nextPoseIndex]);
 
+		a3hierarchyPoseCopy(currentHierarchyState->localPose, currentHierarchyPoseGroup->pose + demoState->currentPose, currentHierarchy->numNodes);
+
 		// cycle through bones
-		for (i = 1; i < currentHierarchy->numNodes; ++i)
+		for (i = 0; i < currentHierarchy->numNodes; ++i)
 		{
 			// get specific bone from each pose
 			a3_HierarchyNodePose currBone = currentPose->nodePose[i];
 			a3_HierarchyNodePose nextBone = nextPose->nodePose[i];
 
-			a3_HierarchyPose* currentNode = &currentHierarchyPoseGroup->pose[demoState->currentPose];
+			// get current bones state
+			//a3_HierarchyPose* currentNode = &currentHierarchyPoseGroup->pose[demoState->currentPose];
 
 			// interpolate
-			a3real4Lerp(currentNode->nodePose[i].translation.v, currBone.translation.v, nextBone.translation.v, demoState->segmentParam);
-			a3real4Lerp(currentNode->nodePose[i].orientation.v, currBone.orientation.v, nextBone.orientation.v, demoState->segmentParam);
-			a3real4Lerp(currentNode->nodePose[i].scale.v,		currBone.scale.v,		nextBone.scale.v,		demoState->segmentParam);
+			a3real4Lerp(currentHierarchyState->localPose->nodePose[i].translation.v,	currBone.translation.v,	nextBone.translation.v, demoState->animationInterp);
+			a3real4Lerp(currentHierarchyState->localPose->nodePose[i].orientation.v,	currBone.orientation.v,	nextBone.orientation.v, demoState->animationInterp);
+			a3real4Lerp(currentHierarchyState->localPose->nodePose[i].scale.v,			currBone.scale.v,		nextBone.scale.v,		demoState->animationInterp);
 		}
 	}
+
 	
-	a3hierarchyPoseCopy(currentHierarchyState->localPose,
-		currentHierarchyPoseGroup->pose + 0, currentHierarchy->numNodes);
+	
 	a3hierarchyPoseConvert(currentHierarchyState->localSpace,
 		currentHierarchyState->localPose, currentHierarchy->numNodes, 0);
 	a3kinematicsSolveForward(demoState->hierarchyState_skel);
