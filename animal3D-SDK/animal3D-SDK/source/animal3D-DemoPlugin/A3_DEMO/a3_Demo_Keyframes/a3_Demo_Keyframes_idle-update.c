@@ -194,9 +194,7 @@ void a3keyframes_update(a3_DemoState* demoState, a3_Demo_Keyframes* demoMode, a3
 			a3real4Lerp(currentHierarchyState->localPose->nodePose[i].scale.v,			currBone.scale.v,		nextBone.scale.v,		demoState->animationInterp);
 		}
 	}
-
-	
-	
+		
 	a3hierarchyPoseConvert(currentHierarchyState->localSpace,
 		currentHierarchyState->localPose, currentHierarchy->numNodes, 0);
 	a3kinematicsSolveForward(demoState->hierarchyState_skel);
