@@ -5,8 +5,9 @@ using UnityEngine;
 public class DrawToTexScript : MonoBehaviour
 {
 	public Texture2D refTex;
-	public int rayCount = 2;
 	public float raySegmentLength = 10.0f;
+	public int rayCount = 2;
+	public int raysPerFrame=15;
 
 	private Camera cam;
 	//private Texture2D origTex;
@@ -16,6 +17,7 @@ public class DrawToTexScript : MonoBehaviour
 	private Vector3 rayOrigin;
 	private Color defaultCol;
 	private float pixelOffset;
+	private int totRays,rayIndex,lastIndex;
 
 	// Start is called before the first frame update
 	void Start()
@@ -31,6 +33,10 @@ public class DrawToTexScript : MonoBehaviour
 		rayOrigin = cam.gameObject.transform.position;
 
 		defaultCol = new Color(0f, 0f, 0f, 0f);
+
+		totRays = refTex.width * refTex.height;
+		rayIndex = 0;
+		lastIndex = 0;
 	}
 
 	// Update is called once per frame
@@ -56,10 +62,20 @@ public class DrawToTexScript : MonoBehaviour
 
 	private void CastAllRays()
 	{
-		for (int i = 0; i < rayCount; i++)
-			CastRay(i);
+		int loopEnd = lastIndex + raysPerFrame;
+		if (loopEnd > totRays) loopEnd = totRays;
+
+		for (rayIndex = lastIndex; rayIndex < loopEnd; rayIndex++)
+			CastRay(rayIndex);
+
+		if (loopEnd == totRays) lastIndex = 0;
+		else lastIndex = loopEnd;
+
+		//for (int i = 0; i < rayCount; i++)
+		//	CastRay(i);
 	}
 
+	// Cast ray based on set rays
 	private void CastRay(int index)
 	{
 		// Get pixel coordinates
@@ -100,6 +116,64 @@ public class DrawToTexScript : MonoBehaviour
 			CastBounce(cast, hit);
 		}
 	}
+
+	Vector2 indexToPoint(int index)
+	{
+		int acc=index,y = 0;
+		while(acc> refTex.width)
+		{
+			acc -= refTex.width;
+			y++;
+		}
+
+		return new Vector2(acc, y);
+	}
+	int pointToIndex(Vector2 point)
+	{
+		return (int)(point.x) + (int)(point.y) * refTex.width;
+	}
+
+	// Cast random ray
+	//private void CastRay(int index)
+	//{
+	//	// Get pixel coordinates
+	//	float screenX, screenY;
+	//	if (index == 0)
+	//	{
+	//		// if the first ray, make it center
+	//		screenX = screenDim.x / 2f;
+	//		screenY = screenDim.y / 2f;
+	//	}
+	//	else
+	//	{
+	//		// else get a random one
+	//		screenX = UnityEngine.Random.Range(0f, screenDim.x);
+	//		screenY = UnityEngine.Random.Range(0f, screenDim.y);
+	//	}
+	//
+	//	// make screen coordinate and turn to a world coordinate
+	//	Vector3 screenPt = new Vector3(screenX, screenY, 1f);
+	//	Vector3 aimPoint = cam.ScreenToWorldPoint(screenPt);
+	//
+	//	//Debug.Log(aimPoint.ToString("F3"));
+	//
+	//	// Get ray dir
+	//	Vector3 rayDir = (aimPoint - rayOrigin).normalized;
+	//
+	//	// Cast ray
+	//	Ray cast = new Ray(rayOrigin, rayDir * raySegmentLength);
+	//	RaycastHit hit;
+	//	Physics.Raycast(cast, out hit);
+	//
+	//	//Debug.DrawRay(rayOrigin, rayDir * raySegmentLength, Color.green);
+	//
+	//	// If hit: bounce
+	//	if (hit.collider)
+	//	{
+	//		hitTexCoord = hit.textureCoord;
+	//		CastBounce(cast, hit);
+	//	}
+	//}
 
 	private void CastBounce(Ray ray, RaycastHit hit)
 	{
