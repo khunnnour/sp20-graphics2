@@ -9,14 +9,13 @@ public class LookScript : MonoBehaviour
 	public float sensitivty = 1.0f;
 
 	private bool dragging;
-	private Vector3 dragOrigin, dragStop;
+	private Vector3 dragOrigin;
 
 	// Start is called before the first frame update
 	void Start()
 	{
 		dragging = false;
 		dragOrigin = Vector3.zero;
-		dragStop = Vector3.zero;
 	}
 
 	// Update is called once per frame
