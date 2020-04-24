@@ -5,8 +5,10 @@
 		_MainTex("Main Texture", 2D) = "white" {}
 		_SpecTex("Specular map", 2D) = "white" {}
 		_ReflTex("Reflection", 2D) = "white" {}
+		//_SkyCube("Skybox", Cube) = "white"{}
 	}
-		SubShader
+	
+	SubShader
 	{
 		// No culling or depth
 		//Cull Off ZWrite Off ZTest Always
@@ -42,6 +44,8 @@
 			sampler2D _MainTex;
 			sampler2D _SpecTex;
 			sampler2D _ReflTex;
+			float4 _ReflTex_TexelSize;
+			//sampler3D _SkyCube;
 
 			fixed4 frag(v2f i) : SV_Target
 			{
@@ -53,6 +57,7 @@
 
 				return fixed4(col.xyz,1.0f);
 			}
+
 			ENDCG
 		}
 	}
