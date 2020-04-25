@@ -1,4 +1,4 @@
-﻿Shader "Despeckle Shader 4x"
+﻿Shader "Despeckle Blur 4x"
 {
     Properties
     {
@@ -47,15 +47,15 @@
                 float off = _ReflTex_TexelSize.x;
 
                 // top row
-                color += tex2D(_ReflTex, float2(i.uv.x, i.uv.y + off)) * 0.2f;
+                color += tex2D(_ReflTex, float2(i.uv.x, i.uv.y + off)) * 0.225f;
 
                 // middle row
-                color += tex2D(_ReflTex, float2(i.uv.x + off, i.uv.y)) * 0.2f;
-                color += tex2D(_ReflTex, float2(i.uv.x, i.uv.y)) * 0.2f;
-                color += tex2D(_ReflTex, float2(i.uv.x - off, i.uv.y)) * 0.2f;
+                color += tex2D(_ReflTex, float2(i.uv.x + off, i.uv.y)) * 0.225f;
+                color += tex2D(_ReflTex, float2(i.uv.x, i.uv.y)) * 0.1f;
+                color += tex2D(_ReflTex, float2(i.uv.x - off, i.uv.y)) * 0.225f;
                 
                 // bottom
-                color += tex2D(_ReflTex, float2(i.uv.x, i.uv.y - off)) * 0.2f;
+                color += tex2D(_ReflTex, float2(i.uv.x, i.uv.y - off)) * 0.225f;
 
                 return color;
             }

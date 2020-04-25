@@ -148,8 +148,8 @@ public class DrawToTexScript : MonoBehaviour
 		else
 		{
 			// else get a random one
-			screenX = UnityEngine.Random.Range(0f, screenDim.x);
-			screenY = UnityEngine.Random.Range(0f, screenDim.y);
+			screenX = UnityEngine.Random.Range(-2f, screenDim.x+2f);
+			screenY = UnityEngine.Random.Range(-2f, screenDim.y+2f);
 		}
 
 		// make screen coordinate and turn to a world coordinate
