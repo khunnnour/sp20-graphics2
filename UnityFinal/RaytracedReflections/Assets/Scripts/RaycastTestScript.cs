@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RaycastScript : MonoBehaviour
+public class RaycastTestScript : MonoBehaviour
 {
 	public int bounces = 1;
 	public int rayCount = 1;

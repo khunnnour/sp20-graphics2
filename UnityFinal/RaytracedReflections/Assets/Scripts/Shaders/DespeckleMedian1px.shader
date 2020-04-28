@@ -142,42 +142,6 @@
 			void bubbleSort()
 			{
 				float tmp;
-				//bool swapped = true;
-				//int j = 0;
-				//
-				//for (int c = 0; c < 3; c--)
-				//{
-				//	if (!swapped)
-				//		break;
-				//	swapped = false;
-				//	j++;
-				//	for (int i = 0; i < 3; i++)
-				//	{
-				//		if (i >= 3 - j)
-				//			break;
-				//		if (vals[i].r > vals[i + 1].r)
-				//		{
-				//			tmp = vals[i].r;
-				//			vals[i].r = vals[i + 1].r;
-				//			vals[i + 1].r = tmp;
-				//			swapped = true;
-				//		}
-				//		if (vals[i].g > vals[i + 1].g)
-				//		{
-				//			tmp = vals[i].g;
-				//			vals[i].g = vals[i + 1].g;
-				//			vals[i + 1].g = tmp;
-				//			swapped = true;
-				//		}
-				//		if (vals[i].b > vals[i + 1].b)
-				//		{
-				//			tmp = vals[i].b;
-				//			vals[i].b = vals[i + 1].b;
-				//			vals[i + 1].b = tmp;
-				//			swapped = true;
-				//		}
-				//	}
-				//}
 				bool sorted = false;
 				while (!sorted)
 				{

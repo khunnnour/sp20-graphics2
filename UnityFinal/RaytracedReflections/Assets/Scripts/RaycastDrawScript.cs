@@ -2,24 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DrawToTexScript : MonoBehaviour
+public class RaycastDrawScript : MonoBehaviour
 {
 	public Cubemap skybox;
 	public Texture2D refTex;
 	public bool randomRays;
-	public float raySegmentLength = 10.0f;
-	[Header("Random Ray Settings")]
-	public int rayCount = 25;
-	[Header("Sweep Ray Settings")]
+	public float rayLength = 10.0f;
 	public int raysPerFrame = 50;
 
 	private Camera cam;
-	//private Texture2D origTex;
 	private Vector2 screenDim;
 	private Vector2 hitTexCoord;
-	private Vector3 camTopCorner, camBotCorner;
 	private Vector3 rayOrigin;
-	private Color defaultCol;
 	private float pixelOffsetX, pixelOffsetY;
 	private int totRays, rayIndex, lastIndex;
 
@@ -28,16 +22,12 @@ public class DrawToTexScript : MonoBehaviour
 	{
 		cam = GameObject.FindObjectOfType<Camera>();
 
-		//origTex = refTex;
-
 		pixelOffsetX = 0f;
 		pixelOffsetY = 0f;
 
 		screenDim = new Vector2(cam.pixelWidth, cam.pixelHeight);
 
 		rayOrigin = cam.gameObject.transform.position;
-
-		defaultCol = new Color(1f, 1f, 1f, 0f);
 
 		totRays = refTex.width * refTex.height;
 		rayIndex = 0;
@@ -50,17 +40,6 @@ public class DrawToTexScript : MonoBehaviour
 		// update ray origin
 		rayOrigin = cam.gameObject.transform.position;
 
-		// update camera world bounds
-		// get bottom worldspace corner
-		//Vector3 screenPt = new Vector3(0f, 0f, 1f);
-		//camBotCorner = cam.ScreenToWorldPoint(screenPt);
-		////Debug.DrawRay(rayOrigin, (camBotCorner - rayOrigin) * raySegmentLength, Color.cyan);
-		//// get top worldspace corner
-		//screenPt = new Vector3(screenDim.x, screenDim.y, 1f);
-		//camTopCorner = cam.ScreenToWorldPoint(screenPt);
-		//Debug.DrawRay(rayOrigin, (camTopCorner - rayOrigin)*raySegmentLength, Color.cyan);
-
-
 		// cast the rays
 		CastAllRays();
 	}
@@ -69,7 +48,7 @@ public class DrawToTexScript : MonoBehaviour
 	{
 		if (randomRays)
 		{
-			for (int i = 0; i < rayCount; i++)
+			for (int i = 0; i < raysPerFrame; i++)
 				CastRngRay(i);
 		}
 		else
@@ -83,6 +62,7 @@ public class DrawToTexScript : MonoBehaviour
 			if (loopEnd == totRays)
 			{
 				lastIndex = 0;
+				// for offsetting the ray line to pickup missed pixels
 				//pixelOffset += 0.5f;
 				//if (pixelOffset > 2f) pixelOffset = -2f;
 			}
@@ -112,11 +92,11 @@ public class DrawToTexScript : MonoBehaviour
 		Vector3 rayDir = (aimPoint - rayOrigin).normalized;
 
 		// Cast ray
-		Ray cast = new Ray(rayOrigin, rayDir * raySegmentLength);
+		Ray cast = new Ray(rayOrigin, rayDir * rayLength);
 		RaycastHit hit;
 		Physics.Raycast(cast, out hit);
 
-		//Debug.DrawRay(rayOrigin, rayDir * raySegmentLength, Color.green);
+		Debug.DrawRay(rayOrigin, rayDir * rayLength, Color.green);
 
 		// If hit: bounce
 		if (hit.collider)
@@ -124,7 +104,7 @@ public class DrawToTexScript : MonoBehaviour
 			// Get reflectiveness
 			Color reflectCol = GetHitRelfectiveness(hit);
 			float reflect = reflectCol.r;
-			//Debug.Log("Reflective: " + reflect.ToString("F2"));
+			Debug.Log("Reflective: " + reflect.ToString("F2"));
 
 			if (reflect > 0f)
 			{
@@ -162,7 +142,7 @@ public class DrawToTexScript : MonoBehaviour
 		Vector3 rayDir = (aimPoint - rayOrigin).normalized;
 
 		// Cast ray
-		Ray cast = new Ray(rayOrigin, rayDir * raySegmentLength);
+		Ray cast = new Ray(rayOrigin, rayDir * rayLength);
 		RaycastHit hit;
 		Physics.Raycast(cast, out hit);
 
@@ -190,36 +170,12 @@ public class DrawToTexScript : MonoBehaviour
 
 		Vector3 reflected = Vector3.Reflect(ray.direction, hit.normal);
 
-		//Debug.DrawRay(hit.point, reflected * raySegmentLength * reflect , Color.red);
-		if (Physics.Raycast(hit.point, reflected * raySegmentLength * reflect, out hit))
+		Debug.DrawRay(hit.point, reflected * rayLength * reflect , Color.red);
+		if (Physics.Raycast(hit.point, reflected * rayLength * reflect, out hit))
 		{
 			// Output color found
 			color = GetHitColor(hit);
 			//Debug.Log(color);
-
-			// get screenspace coordinate
-			//Vector3 screenCoord = cam.WorldToScreenPoint(hit.point);
-			//
-			// transform points into cam space to eliminate some 3d considerations
-			//Vector3 newHitPt = cam.transform.worldToLocalMatrix * hit.point;
-			//
-			//Vector3 screenPt = new Vector3(0f, 0f, 1f);
-			//camBotCorner = cam.transform.worldToLocalMatrix * cam.ScreenToWorldPoint(screenPt);
-			//
-			//screenPt = new Vector3(screenDim.x, screenDim.y, 1f);
-			//camTopCorner = cam.transform.worldToLocalMatrix * cam.ScreenToWorldPoint(screenPt);
-
-			//Vector2 uv = new Vector2(
-			//	(newHitPt.x - camBotCorner.x) / (camTopCorner.x - camBotCorner.x),
-			//	(newHitPt.y - camBotCorner.y) / (camTopCorner.y - camBotCorner.y)
-			//	);
-
-			//if (screenCoord.y - screenDim.y > pixelOffset)
-			//	pixelOffset = screenCoord.y - screenDim.y;
-
-			// set texture pixel color found from hit
-			//refTex.SetPixel((int)(hitTexCoord.x * refTex.width), (int)(hitTexCoord.y * refTex.height), color);
-			//refTex.SetPixel((int)(screenCoord.x / screenDim.x * refTex.width), (int)((1f - (screenCoord.y + pixelOffset) / screenDim.y) * refTex.height), color);
 		}
 		else
 		{
@@ -352,10 +308,4 @@ public class DrawToTexScript : MonoBehaviour
 	{
 		return (int)(point.x) + (int)(point.y) * refTex.width;
 	}
-
-
-	//private void OnDestroy()
-	//{
-	//	refTex = origTex;
-	//}
 }

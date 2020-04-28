@@ -1,4 +1,4 @@
-﻿Shader "Despeckle Shader 8x"
+﻿Shader "Despeckle Blur 8x"
 {
     Properties
     {
