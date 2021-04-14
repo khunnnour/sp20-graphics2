@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class RaycastDrawScript : MonoBehaviour
 {
@@ -10,35 +8,35 @@ public class RaycastDrawScript : MonoBehaviour
 	public float rayLength = 10.0f;
 	public int raysPerFrame = 50;
 
-	private Camera cam;
-	private Vector2 screenDim;
-	private Vector2 hitTexCoord;
-	private Vector3 rayOrigin;
-	private float pixelOffsetX, pixelOffsetY;
-	private int totRays, rayIndex, lastIndex;
+	private Camera _cam;
+	private Vector2 _screenDim;
+	private Vector2 _hitTexCoord;
+	private Vector3 _rayOrigin;
+	private float _pixelOffsetX, _pixelOffsetY;
+	private int _totRays, _rayIndex, _lastIndex;
 
 	// Start is called before the first frame update
 	void Start()
 	{
-		cam = GameObject.FindObjectOfType<Camera>();
+		_cam = GameObject.FindObjectOfType<Camera>();
 
-		pixelOffsetX = 0f;
-		pixelOffsetY = 0f;
+		_pixelOffsetX = 0f;
+		_pixelOffsetY = 0f;
 
-		screenDim = new Vector2(cam.pixelWidth, cam.pixelHeight);
+		_screenDim = new Vector2(_cam.pixelWidth, _cam.pixelHeight);
 
-		rayOrigin = cam.gameObject.transform.position;
+		_rayOrigin = _cam.gameObject.transform.position;
 
-		totRays = refTex.width * refTex.height;
-		rayIndex = 0;
-		lastIndex = 0;
+		_totRays = refTex.width * refTex.height;
+		_rayIndex = 0;
+		_lastIndex = 0;
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
 		// update ray origin
-		rayOrigin = cam.gameObject.transform.position;
+		_rayOrigin = _cam.gameObject.transform.position;
 
 		// cast the rays
 		CastAllRays();
@@ -53,20 +51,20 @@ public class RaycastDrawScript : MonoBehaviour
 		}
 		else
 		{
-			int loopEnd = lastIndex + raysPerFrame;
-			if (loopEnd > totRays) loopEnd = totRays;
+			int loopEnd = _lastIndex + raysPerFrame;
+			if (loopEnd > _totRays) loopEnd = _totRays;
 
-			for (rayIndex = lastIndex; rayIndex < loopEnd; rayIndex++)
-				CastRay(rayIndex);
+			for (_rayIndex = _lastIndex; _rayIndex < loopEnd; _rayIndex++)
+				CastRay(_rayIndex);
 
-			if (loopEnd == totRays)
+			if (loopEnd == _totRays)
 			{
-				lastIndex = 0;
+				_lastIndex = 0;
 				// for offsetting the ray line to pickup missed pixels
 				//pixelOffset += 0.5f;
 				//if (pixelOffset > 2f) pixelOffset = -2f;
 			}
-			else lastIndex = loopEnd;
+			else _lastIndex = loopEnd;
 		}
 	}
 
@@ -74,41 +72,42 @@ public class RaycastDrawScript : MonoBehaviour
 	private void CastRay(int index)
 	{
 		// Get point from index
-		Vector2 point = indexToPoint(index);
+		Vector2 point = IndexToPoint(index);
 		// Turn into a uv
 		point.x *= 1f / refTex.width;
 		point.y *= 1f / refTex.height;
 
 		// Get random offset
-		pixelOffsetX = Random.Range(-2f, 2f);
-		pixelOffsetY = Random.Range(-2f, 2f);
+		_pixelOffsetX = Random.Range(-2f, 2f);
+		_pixelOffsetY = Random.Range(-2f, 2f);
 
 		// make screen coordinate out of uv
-		Vector3 screenPt = new Vector3(point.x * screenDim.x + pixelOffsetX, point.y * screenDim.y + pixelOffsetY, 1f);
+		Vector3 screenPt = new Vector3(point.x * _screenDim.x + _pixelOffsetX, point.y * _screenDim.y + _pixelOffsetY, 1f);
 		// turn screen point into a world point
-		Vector3 aimPoint = cam.ScreenToWorldPoint(screenPt);
+		Vector3 aimPoint = _cam.ScreenToWorldPoint(screenPt);
 
 		// Get ray dir
-		Vector3 rayDir = (aimPoint - rayOrigin).normalized;
+		Vector3 rayDir = (aimPoint - _rayOrigin).normalized;
 
 		// Cast ray
-		Ray cast = new Ray(rayOrigin, rayDir * rayLength);
+		Ray cast = new Ray(_rayOrigin, rayDir * rayLength);
 		RaycastHit hit;
 		Physics.Raycast(cast, out hit);
 
-		Debug.DrawRay(rayOrigin, rayDir * rayLength, Color.green);
+		Debug.DrawRay(_rayOrigin, rayDir * rayLength, Color.green);
 
 		// If hit: bounce
 		if (hit.collider)
 		{
 			// Get reflectiveness
-			Color reflectCol = GetHitRelfectiveness(hit);
-			float reflect = reflectCol.r;
+			//Color reflectCol = GetHitRelfectiveness(hit);
+			//float reflect = reflectCol.r;
+			float reflect = 1f;
 			Debug.Log("Reflective: " + reflect.ToString("F2"));
 
 			if (reflect > 0f)
 			{
-				hitTexCoord = hit.textureCoord;
+				_hitTexCoord = hit.textureCoord;
 				CastBounce(cast, hit, reflect);
 			}
 		}
@@ -122,43 +121,45 @@ public class RaycastDrawScript : MonoBehaviour
 		if (index == 0)
 		{
 			// if the first ray, make it center
-			screenX = screenDim.x / 2f;
-			screenY = screenDim.y / 2f;
+			screenX = _screenDim.x / 2f;
+			screenY = _screenDim.y / 2f;
 		}
 		else
 		{
 			// else get a random one
-			screenX = UnityEngine.Random.Range(-2f, screenDim.x+2f);
-			screenY = UnityEngine.Random.Range(-2f, screenDim.y+2f);
+			screenX = Random.Range(-2f, _screenDim.x+2f);
+			screenY = Random.Range(-2f, _screenDim.y+2f);
 		}
 
 		// make screen coordinate and turn to a world coordinate
 		Vector3 screenPt = new Vector3(screenX, screenY, 1f);
-		Vector3 aimPoint = cam.ScreenToWorldPoint(screenPt);
+		Vector3 aimPoint = _cam.ScreenToWorldPoint(screenPt);
 
 		//Debug.Log(aimPoint.ToString("F3"));
 
 		// Get ray dir
-		Vector3 rayDir = (aimPoint - rayOrigin).normalized;
+		Vector3 rayDir = (aimPoint - _rayOrigin).normalized;
 
 		// Cast ray
-		Ray cast = new Ray(rayOrigin, rayDir * rayLength);
+		Ray cast = new Ray(_rayOrigin, rayDir * rayLength);
 		RaycastHit hit;
 		Physics.Raycast(cast, out hit);
 
-		//Debug.DrawRay(rayOrigin, rayDir * raySegmentLength, Color.green);
+		Debug.DrawRay(_rayOrigin, rayDir * rayLength, Color.green);
 
 		// If hit: bounce
 		if (hit.collider)
 		{
 			// Get reflectiveness
-			Color reflectCol = GetHitRelfectiveness(hit);
-			float reflect = reflectCol.r;
+			//Color reflectCol = GetHitRelfectiveness(hit);
+			//float reflect = reflectCol.r;
+			float reflect = 1f;
 			//Debug.Log("Reflective: " + reflect.ToString("F2"));
 
-			if (reflect > 0f)
+			//if (reflect > 0f)
+			if (hit.collider.CompareTag("refl"))
 			{
-				hitTexCoord = hit.textureCoord;
+				_hitTexCoord = hit.textureCoord;
 				CastBounce(cast, hit, reflect);
 			}
 		}
@@ -184,16 +185,16 @@ public class RaycastDrawScript : MonoBehaviour
 			color = SampleSkyBox(reflected.normalized);
 		}
 
-		refTex.SetPixel((int)(hitTexCoord.x * refTex.width), (int)(hitTexCoord.y * refTex.height), color);
+		refTex.SetPixel((int)(_hitTexCoord.x * refTex.width), (int)(_hitTexCoord.y * refTex.height), color);
 		refTex.Apply();
 	}
 
 	// Get objects reflectiveness at ray hit point
-	private Color GetHitRelfectiveness(RaycastHit hit)
+	/*private Color GetHitRelfectiveness(RaycastHit hit)
 	{
 		// Get renderer and its material
 		Renderer renderer = hit.collider.GetComponent<MeshRenderer>();
-		Texture2D specularMap = renderer.material.GetTexture("_MetallicGlossMap") as Texture2D;
+		Texture2D specularMap = renderer.material.GetTexture("_SpecTex") as Texture2D;
 
 		// get texcoord that was hit
 		Vector2 pCoord = hit.textureCoord;
@@ -207,14 +208,14 @@ public class RaycastDrawScript : MonoBehaviour
 
 		// Return color found
 		return color;
-	}
+	}*/
 
 	// Get objects color at ray hit point
 	private Color GetHitColor(RaycastHit hit)
 	{
 		// Get renderer and its material
-		Renderer renderer = hit.collider.GetComponent<MeshRenderer>();
-		Texture2D texture2D = renderer.material.mainTexture as Texture2D;
+		Renderer component = hit.collider.GetComponent<MeshRenderer>();
+		Texture2D texture2D = component.material.mainTexture as Texture2D;
 
 		// get texcoord that was hit
 		Vector2 pCoord = hit.textureCoord;
@@ -223,7 +224,7 @@ public class RaycastDrawScript : MonoBehaviour
 		//Debug.Log(pCoord.ToString("F3"));
 
 		// compensate for tiling and get the texture color
-		Vector2 tiling = renderer.material.mainTextureScale;
+		Vector2 tiling = component.material.mainTextureScale;
 		Color color = texture2D.GetPixel(Mathf.FloorToInt(pCoord.x * tiling.x), Mathf.FloorToInt(pCoord.y * tiling.y));
 
 		// Return color found
@@ -293,7 +294,7 @@ public class RaycastDrawScript : MonoBehaviour
 		return skybox.GetPixel(face, (int)(uv.x * skybox.width * 0.25f), (int)(uv.y * skybox.width * 0.25f));
 	}
 
-	Vector2 indexToPoint(int index)
+	Vector2 IndexToPoint(int index)
 	{
 		int acc = index, y = 0;
 		while (acc > refTex.width)
@@ -304,7 +305,7 @@ public class RaycastDrawScript : MonoBehaviour
 
 		return new Vector2(acc, y);
 	}
-	int pointToIndex(Vector2 point)
+	int PointToIndex(Vector2 point)
 	{
 		return (int)(point.x) + (int)(point.y) * refTex.width;
 	}
